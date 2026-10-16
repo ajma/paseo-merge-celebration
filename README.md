@@ -15,8 +15,26 @@ _Staged screenshot: the real celebration UI over a fictional workspace._
 - **Keep your flow.** Your current screen stays right where it is, ready to use.
 - **Enjoy it as long as you like.** Hit **Dismiss** when you’re done, and the last pieces drift offscreen.
 - **Keep it calm.** Reduced motion gives you the recap without the animation.
+- **Make it yours.** Pick the words, the emoji and the kind of confetti you like.
 
 Unmerged work stays quiet. Each archive gets its moment, without old celebrations popping up when you reconnect.
+
+## Make it yours
+
+Open **Settings → Plugins → Merge celebration**, or choose **Merge celebration settings** in the Command Center.
+
+| Setting | Choices |
+| --- | --- |
+| **Celebrate merged work** | On or off. Preview still works when it’s off. |
+| **Verb** | Work _shipped_, _landed_, _merged_, _committed_ or _deployed_ |
+| **Emoji** | 🎉, 🚀, ✨, 🥳 or none |
+| **Show linked issues** | Include or hide the recap of the issues your PR closes |
+| **Show confetti** | Keep the recap and skip the confetti |
+| **Size** | Small, medium or large pieces |
+| **Speed** | A slow drift, a normal fall or a fast flurry |
+| **Amount** | Light, normal or heavy |
+
+Changes apply right away, even to confetti that’s already falling. Press **Preview** on the settings page to try them. Your choices are saved on the Paseo host, so every window connected to that host gets the same celebration.
 
 ## Try a little joy
 

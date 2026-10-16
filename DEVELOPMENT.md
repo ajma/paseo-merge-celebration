@@ -34,6 +34,14 @@ Dismissal stops emission immediately and lets existing pieces leave the viewport
 
 This is a browser-specific integration rather than a Paseo global-overlay contract. The root and decorative animation pass pointer events through; only the recap controls and scrolling capture input. Reduced-motion preferences remove the falling confetti. Fresh confetti enters continuously while the recap is open. The recap stays until dismissed or the connection resets. A celebration received while the same connected window is hidden waits for visibility before animating; the confetti resumes when the same connected window becomes visible again. Colors use Paseo theme tokens received through an invisible sidebar contribution; an OS-theme palette supplies readable defaults before that contribution mounts. Hiding the sidebar contribution affects theme synchronization, not event delivery or preview.
 
+## Settings
+
+`shared/settings.ts` defines one host-scoped settings document with the [settings API](https://paseo.sh/docs/plugins/reference#settings-screens). The server registers it, and `client/settings.tsx` contributes **Settings → Plugins → Merge celebration** using Paseo's named settings components. Each control saves the complete document immediately, with the loaded revision. The schema supplies defaults, so a missing document gives the original celebration: "Work shipped! 🎉", issue recap and confetti on, and medium size, normal speed and normal amount.
+
+The overlay is mounted outside Paseo's component tree, so it cannot call `useSettings` itself. The invisible sidebar footer item that already forwards the theme also forwards the saved settings into the presentation store, and the settings screen does the same while it is open. Hiding that sidebar item leaves celebrations on defaults whenever the settings screen is closed. Turning off **Celebrate merged work** drops live events on the client; Command Center and settings previews still show.
+
+Confetti options are plain multipliers passed to the simulation. Size scales sheets as they are born. Speed scales simulated time, so falling, spinning and emission all speed up or slow down together, and density stays the same. Amount scales both the birth rate and the particle cap. Speed and amount apply to a running shower immediately; size applies to new sheets.
+
 ## Archive and delivery behavior
 
 Current docs and source were inspected at Paseo commit `f56c0139283028ea8b62e9ce40c1fcccad7b3efb`:
@@ -60,7 +68,7 @@ npm run test:ui
 npm run preview
 ```
 
-Browser tests require Chrome. They use the actual client entry and React Native Web, with a host exposing only stock plugin registrations. They exercise preview, full-viewport bounds, issue recaps, continued typing/clicking, theme changes, reduced motion, dismissal, repeat preview and plugin unload. Screenshots are in `artifacts/`.
+Browser tests require Chrome. They use the actual client entry and React Native Web, with a host exposing only stock plugin registrations. They exercise preview, saved settings, full-viewport bounds, issue recaps, continued typing/clicking, theme changes, reduced motion, dismissal, repeat preview and plugin unload. Screenshots are in `artifacts/`.
 
 The actual archive-hook test uses a prepared Paseo source checkout (`npm ci`, `npm run build:app-deps`):
 
