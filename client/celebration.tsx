@@ -70,25 +70,35 @@ export function CelebrationOverlay({
               pointerEvents="box-none"
               style={{
                 width: "100%",
-                maxWidth: 440,
-                maxHeight: height * 0.45,
+                maxWidth: layout.compact ? 440 : 520,
+                maxHeight: height * (layout.compact ? 0.5 : 0.55),
                 backgroundColor: theme.colors.surface1,
                 borderColor: theme.colors.border,
                 borderWidth: 1,
                 borderRadius: 16,
-                padding: 18,
-                gap: 8,
+                padding: layout.compact ? 18 : 22,
+                gap: layout.compact ? 8 : 10,
               }}
             >
-              <View pointerEvents="none" style={{ gap: 8 }}>
+              <View pointerEvents="none" style={{ gap: layout.compact ? 8 : 10 }}>
                 <Text
                   accessibilityRole="header"
                   accessibilityLiveRegion="polite"
-                  style={{ color: theme.colors.statusSuccess, fontSize: 22, fontWeight: "700" }}
+                  style={{
+                    color: theme.colors.statusSuccess,
+                    fontSize: layout.compact ? 22 : 25,
+                    fontWeight: "700",
+                  }}
                 >
                   Work shipped! 🎉
                 </Text>
-                <Text style={{ color: theme.colors.foreground, fontSize: 16, fontWeight: "600" }}>
+                <Text
+                  style={{
+                    color: theme.colors.foreground,
+                    fontSize: layout.compact ? 16 : 17,
+                    fontWeight: "600",
+                  }}
+                >
                   {event.title}
                 </Text>
                 <Text style={{ color: theme.colors.foregroundMuted, fontSize: 13 }}>

@@ -61,8 +61,8 @@ export function createConfetti(initialWidth: number, initialHeight: number, rand
       tumble: between(2.5, 6) * (random() < 0.5 ? -1 : 1),
       phase: between(0, Math.PI * 2),
       flutter: between(2, 5),
-      gravity: between(420, 620),
-      terminalSpeed: between(150, 230) + paperWidth * 3,
+      gravity: between(520, 740),
+      terminalSpeed: between(185, 275) + paperWidth * 3,
       age: 0,
       color: colors[0],
       backColor: colors[1],
@@ -72,7 +72,7 @@ export function createConfetti(initialWidth: number, initialHeight: number, rand
     time += STEP;
     if (emitting) {
       // Reserve capacity for the longest fall, so tall windows never saturate into bursts.
-      const transitSeconds = (height + 80) / 145 + 0.7;
+      const transitSeconds = (height + 80) / 180 + 0.6;
       const rate = Math.min(
         Math.max(14, Math.min(45, width / 34)),
         (MAX_PARTICLES * 0.85) / transitSeconds,
