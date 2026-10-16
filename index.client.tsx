@@ -5,6 +5,7 @@ import { createCelebrationStore } from "./client/store";
 import { createPresentationStore, type PresentationStore } from "./client/presentation";
 import { mountBrowserOverlay } from "./client/web";
 import { startLiveEvents } from "./client/events";
+import { SettingsScreen, useSettingsBridge } from "./client/settings";
 import { previewCelebration, reportCelebration } from "./shared/celebration";
 
 function ThemeBridge({
@@ -14,6 +15,7 @@ function ThemeBridge({
   useEffect(() => {
     presentation.update(theme);
   }, [theme, presentation]);
+  useSettingsBridge(presentation);
   return null;
 }
 export default function contribute(client: PluginClientContext) {
@@ -27,7 +29,15 @@ export default function contribute(client: PluginClientContext) {
       void client.rpc(reportCelebration, { id }).catch(() => {});
     },
   });
-  const stopEvents = startLiveEvents(client, store);
+  const stopEvents = startLiveEvents(client, {
+    ...store,
+    show(event) {
+      if (presentation.getSettings().enabled) store.show(event);
+    },
+  });
+  function preview() {
+    store.show({ ...previewCelebration, id: `preview-${Date.now()}-${Math.random()}` });
+  }
   function Bridge(props: PluginSidebarItemProps) {
     return <ThemeBridge {...props} presentation={presentation} />;
   }
@@ -36,18 +46,36 @@ export default function contribute(client: PluginClientContext) {
     title: "Merge celebration",
     Component: Bridge,
   });
+  const removeSettings = client.addSettingsScreen({
+    id: "settings",
+    title: "Merge celebration",
+    icon: "PartyPopper",
+    Component: (props) => (
+      <SettingsScreen {...props} presentation={presentation} onPreview={preview} />
+    ),
+  });
   const removePreview = client.addCommandCenterItem({
     id: "preview-celebration",
     title: "Preview merge celebration",
     icon: "PartyPopper",
     keywords: ["confetti", "celebrate", "merged"],
     context: "global",
-    onSelect() {
-      store.show({ ...previewCelebration, id: `preview-${Date.now()}-${Math.random()}` });
+    onSelect: preview,
+  });
+  const removeOpenSettings = client.addCommandCenterItem({
+    id: "celebration-settings",
+    title: "Merge celebration settings",
+    icon: "Settings",
+    keywords: ["confetti", "celebrate", "merged", "preferences"],
+    context: "global",
+    onSelect({ openSettings }) {
+      openSettings("settings");
     },
   });
   return () => {
+    removeOpenSettings();
     removePreview();
+    removeSettings();
     removeTheme();
     stopEvents();
     unmount?.();

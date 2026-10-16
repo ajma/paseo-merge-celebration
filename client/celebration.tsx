@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import {
   AccessibilityInfo,
   Pressable,
@@ -8,6 +8,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import type { PluginHostProps } from "@getpaseo/plugin/client";
+import { confettiOptions, headline, type CelebrationSettings } from "../shared/settings";
 import type { CelebrationStore } from "./store";
 import { Confetti } from "./confetti.web";
 function useReducedMotion() {
@@ -31,7 +32,11 @@ export function CelebrationOverlay({
   theme,
   layout,
   store,
-}: Pick<PluginHostProps, "theme" | "layout"> & { store: CelebrationStore }) {
+  settings,
+}: Pick<PluginHostProps, "theme" | "layout"> & {
+  store: CelebrationStore;
+  settings: CelebrationSettings;
+}) {
   const event = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const motionGeneration = useSyncExternalStore(
     store.subscribe,
@@ -40,14 +45,16 @@ export function CelebrationOverlay({
   );
   const reduced = useReducedMotion();
   const { width, height } = useWindowDimensions();
+  const options = useMemo(() => confettiOptions(settings), [settings]);
   return (
     <>
-      {!reduced && (
+      {!reduced && settings.confetti && (
         <Confetti
           key={motionGeneration}
           eventId={event?.id ?? null}
           width={width}
           height={height}
+          options={options}
         />
       )}
       {event && (
@@ -90,7 +97,7 @@ export function CelebrationOverlay({
                     fontWeight: "700",
                   }}
                 >
-                  Work shipped! 🎉
+                  {headline(settings)}
                 </Text>
                 <Text
                   style={{
@@ -105,7 +112,7 @@ export function CelebrationOverlay({
                   {event.workspaceName}
                 </Text>
               </View>
-              {event.issues.length > 0 && (
+              {settings.showIssues && event.issues.length > 0 && (
                 <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 8 }}>
                   {event.issues.map((issue) => (
                     <View key={issue.number} style={{ gap: 4 }}>

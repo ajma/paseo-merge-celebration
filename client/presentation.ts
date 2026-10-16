@@ -1,5 +1,6 @@
 import type { PluginTheme } from "@getpaseo/plugin";
 import { Appearance } from "react-native";
+import { defaultSettings, type CelebrationSettings } from "../shared/settings";
 
 export function createPresentationStore() {
   const dark = Appearance.getColorScheme() === "dark";
@@ -18,9 +19,11 @@ export function createPresentationStore() {
       statusDanger: "#ff578f",
     },
   };
+  let settings = defaultSettings;
   const listeners = new Set<() => void>();
   return {
     getSnapshot: () => theme,
+    getSettings: () => settings,
     subscribe(listener: () => void) {
       listeners.add(listener);
       return () => {
@@ -29,6 +32,10 @@ export function createPresentationStore() {
     },
     update(next: PluginTheme) {
       theme = next;
+      for (const listener of listeners) listener();
+    },
+    updateSettings(next: CelebrationSettings) {
+      settings = next;
       for (const listener of listeners) listener();
     },
   };

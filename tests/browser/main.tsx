@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Pressable, Text, TextInput, View } from "react-native";
 import type { PluginClientContext, PluginHostProps } from "@getpaseo/plugin/client";
 import contribute from "../../index.client";
+import { setTestSettings } from "./host";
 let Bridge: ComponentType<PluginHostProps>;
 let preview: () => void;
 let restoreSnapshot = () => {};
@@ -36,11 +37,15 @@ const pluginContext = {
     }
     return { events: [] };
   },
-  addCommandCenterItem({ onSelect }: { onSelect: () => void }) {
-    preview = onSelect;
+  addCommandCenterItem({ id, onSelect }: { id: string; onSelect: () => void }) {
+    if (id === "preview-celebration") preview = onSelect;
+    return () => {};
+  },
+  addSettingsScreen() {
     return () => {};
   },
 };
+Object.assign(window, { setCelebrationSettings: setTestSettings });
 const cleanup = contribute(pluginContext as unknown as PluginClientContext);
 function App() {
   const [count, setCount] = useState(0);

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { ConfettiOptions } from "../shared/settings";
 import { createConfetti } from "./confetti-physics";
 
 /** Browser-only drawing boundary; no React state updates during animation frames. */
@@ -6,13 +7,16 @@ export function Confetti({
   eventId,
   width,
   height,
+  options,
 }: {
   eventId: string | null;
   width: number;
   height: number;
+  options: ConfettiOptions;
 }) {
   const canvas = useRef<HTMLCanvasElement | null>(null);
-  const [simulation] = useState(() => createConfetti(width, height));
+  const [simulation] = useState(() => createConfetti(width, height, Math.random, options));
+  useEffect(() => simulation.configure(options), [options, simulation]);
   const [running, setRunning] = useState(false);
   useEffect(() => {
     if (eventId) {

@@ -1,5 +1,8 @@
+import type { ConfettiOptions } from "../shared/settings";
+
 const STEP = 1 / 120;
 const MAX_PARTICLES = 240;
+const DEFAULT_OPTIONS: ConfettiOptions = { size: 1, speed: 1, amount: 1 };
 const COLORS = [
   ["#ff578f", "#bd386b"],
   ["#ffc857", "#c98a32"],
@@ -32,7 +35,13 @@ export interface PaperParticle {
 }
 
 /** Fixed-step paper motion. Births stop independently of the particles already in flight. */
-export function createConfetti(initialWidth: number, initialHeight: number, random = Math.random) {
+export function createConfetti(
+  initialWidth: number,
+  initialHeight: number,
+  random = Math.random,
+  initialOptions: ConfettiOptions = DEFAULT_OPTIONS,
+) {
+  let options = initialOptions;
   let width = initialWidth;
   let height = initialHeight;
   let emitting = false;
@@ -45,7 +54,7 @@ export function createConfetti(initialWidth: number, initialHeight: number, rand
   function spawn() {
     const colors = COLORS[Math.floor(random() * COLORS.length)];
     const birthY = -between(24, 40);
-    const paperWidth = between(5, 10);
+    const paperWidth = between(5, 10) * options.size;
     particles.push({
       id: nextId++,
       x: between(-20, width + 20),
@@ -54,7 +63,7 @@ export function createConfetti(initialWidth: number, initialHeight: number, rand
       vx: between(-25, 25),
       vy: between(25, 70),
       width: paperWidth,
-      height: between(8, 16),
+      height: between(8, 16) * options.size,
       angle: between(0, Math.PI * 2),
       spin: between(1, 3.8) * (random() < 0.5 ? -1 : 1),
       flip: between(0, Math.PI * 2),
@@ -73,14 +82,15 @@ export function createConfetti(initialWidth: number, initialHeight: number, rand
     if (emitting) {
       // Reserve capacity for the longest fall, so tall windows never saturate into bursts.
       const transitSeconds = (height + 80) / 180 + 0.6;
+      const capacity = MAX_PARTICLES * options.amount;
       const rate = Math.min(
-        Math.max(14, Math.min(45, width / 34)),
-        (MAX_PARTICLES * 0.85) / transitSeconds,
+        Math.max(14, Math.min(45, width / 34)) * options.amount,
+        (capacity * 0.85) / transitSeconds,
       );
       birthBudget += rate * STEP;
       while (birthBudget >= 1) {
         birthBudget -= 1;
-        if (particles.length < MAX_PARTICLES) spawn();
+        if (particles.length < capacity) spawn();
       }
     }
     for (let index = particles.length - 1; index >= 0; index--) {
@@ -125,13 +135,17 @@ export function createConfetti(initialWidth: number, initialHeight: number, rand
       particles.length = 0;
       accumulator = birthBudget = 0;
     },
+    /** Size applies to new sheets; speed and amount apply immediately. */
+    configure(next: ConfettiOptions) {
+      options = next;
+    },
     resize(nextWidth: number, nextHeight: number) {
       width = nextWidth;
       height = nextHeight;
     },
     step(seconds: number) {
       // A delayed frame must not teleport the shower or emit a backlog all at once.
-      accumulator += Math.max(0, Math.min(seconds, 0.1));
+      accumulator += Math.max(0, Math.min(seconds, 0.1)) * options.speed;
       while (accumulator + 1e-10 >= STEP) {
         tick();
         accumulator = Math.max(0, accumulator - STEP);

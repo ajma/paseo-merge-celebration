@@ -179,3 +179,19 @@ for (const compact of [false, true]) {
     });
   }
 }
+test("saved settings change the headline, issue recap and confetti", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto("/");
+  const set = (values: Record<string, unknown>) =>
+    page.evaluate((next) => {
+      (window as unknown as { setCelebrationSettings(v: unknown): void }).setCelebrationSettings(next);
+    }, values);
+  await set({ verb: "landed", emoji: "🚀", showIssues: false, confetti: false });
+  await page.getByRole("button", { name: "Preview merge celebration" }).click();
+  await expect(page.getByRole("heading", { name: "Work landed! 🚀" })).toBeVisible();
+  await expect(page.getByText("Celebrate shipped work")).toHaveCount(0);
+  await expect(page.getByTestId("confetti")).toHaveCount(0);
+  await set({ verb: "committed", emoji: "none", showIssues: true, confetti: true });
+  await expect(page.getByRole("heading", { name: "Work committed!", exact: true })).toBeVisible();
+  await expect(page.getByText("#42: Celebrate shipped work")).toBeVisible();
+});

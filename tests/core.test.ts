@@ -178,3 +178,10 @@ test("an inaccessible linked issue cannot suppress a verified merge celebration"
     { number: 3, title: "Issue #3", summary: "Issue details could not be loaded." },
   ]);
 });
+test("settings default to the original celebration and build its headline", async () => {
+  const { defaultSettings, headline, settingsSchema } = await import("../shared/settings");
+  assert.equal(headline(defaultSettings), "Work shipped! 🎉");
+  assert.equal(headline({ verb: "landed", emoji: "none" }), "Work landed!");
+  assert.deepEqual(settingsSchema.parse({}), defaultSettings);
+  assert.equal(settingsSchema.safeParse({ verb: "yeeted" }).success, false);
+});

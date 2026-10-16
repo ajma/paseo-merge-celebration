@@ -27,6 +27,11 @@ export function OverlayRoot({ store, presentation, onPresented }: OverlayRootPro
     presentation.getSnapshot,
     presentation.getSnapshot,
   );
+  const settings = useSyncExternalStore(
+    presentation.subscribe,
+    presentation.getSettings,
+    presentation.getSettings,
+  );
   const { width } = useWindowDimensions();
   if (!visible) return null;
   return (
@@ -34,6 +39,7 @@ export function OverlayRoot({ store, presentation, onPresented }: OverlayRootPro
       theme={theme}
       layout={{ compact: width < 640, platform: "web" }}
       store={store}
+      settings={settings}
     />
   );
 }

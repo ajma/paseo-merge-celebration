@@ -5,9 +5,11 @@ import {
   previewCelebration,
   reportCelebration,
 } from "../shared/celebration";
+import { celebrationSettings } from "../shared/settings";
 import { createBroker } from "./broker";
 import { captureDirectory, identify, resolveCelebration, type Identity } from "./github";
 export function contributeServer(server: PluginServerContext) {
+  server.registerSettings(celebrationSettings);
   const lifetime = new AbortController();
   const startedAt = Date.now();
   const broker = createBroker();

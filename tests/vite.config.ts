@@ -6,6 +6,10 @@ export default defineConfig({
     alias: [
       { find: /^react-native$/, replacement: "react-native-web" },
       {
+        find: /^@getpaseo\/plugin\/client\/ui$/,
+        replacement: fileURLToPath(new URL("./browser/ui.ts", import.meta.url)),
+      },
+      {
         find: /^@getpaseo\/plugin\/client$/,
         replacement: fileURLToPath(new URL("./browser/host.ts", import.meta.url)),
       },

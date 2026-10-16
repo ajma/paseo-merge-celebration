@@ -113,3 +113,31 @@ test("tall desktop windows keep receiving fresh confetti without saturating the 
     }
   }
 });
+test("size scales new sheets, speed scales elapsed motion and amount scales density", () => {
+  const base = createConfetti(1280, 800, random());
+  const large = createConfetti(1280, 800, random(), { size: 1.5, speed: 1, amount: 1 });
+  const fast = createConfetti(1280, 800, random(), { size: 1, speed: 2, amount: 1 });
+  const heavy = createConfetti(1280, 800, random(), { size: 1, speed: 1, amount: 1.8 });
+  for (const simulation of [base, large, fast, heavy]) simulation.start();
+  advance(base, 2);
+  advance(large, 2);
+  advance(fast, 1);
+  advance(heavy, 2);
+  assert.ok(Math.abs(large.particles[0].width - base.particles[0].width * 1.5) < 1e-9);
+  assert.ok(Math.abs(large.particles[0].height - base.particles[0].height * 1.5) < 1e-9);
+  assert.equal(fast.particles.length, base.particles.length);
+  assert.ok(Math.abs(fast.particles[0].y - base.particles[0].y) < 0.01);
+  assert.ok(heavy.particles.length > base.particles.length * 1.5);
+});
+test("reconfiguring a running shower changes speed without restarting it", () => {
+  const simulation = createConfetti(1280, 800, random());
+  simulation.start();
+  advance(simulation, 1);
+  const first = simulation.particles[0];
+  const count = simulation.particles.length;
+  simulation.configure({ size: 1, speed: 0, amount: 1 });
+  const y = first.y;
+  advance(simulation, 1);
+  assert.equal(first.y, y);
+  assert.equal(simulation.particles.length, count);
+});
