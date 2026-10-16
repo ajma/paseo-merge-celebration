@@ -1,0 +1,29 @@
+import { defineRpc } from "@getpaseo/plugin";
+import { z } from "zod";
+export const celebrationSchema = z.object({
+  id: z.string(),
+  workspaceName: z.string(),
+  title: z.string(),
+  url: z.string().url(),
+  issues: z.array(z.object({ number: z.number().int(), title: z.string(), summary: z.string() })),
+});
+export type Celebration = z.infer<typeof celebrationSchema>;
+export const pollCelebrations = defineRpc({
+  name: "celebrations.poll",
+  input: z.object({ session: z.string().min(1).max(100), baseline: z.boolean() }),
+  output: z.object({ events: z.array(celebrationSchema) }),
+});
+export const previewCelebration: Celebration = {
+  id: "preview",
+  workspaceName: "Celebration preview",
+  title: "Fullscreen celebrations for shipped work",
+  url: "https://github.com/getpaseo/paseo",
+  issues: [
+    {
+      number: 42,
+      title: "Celebrate shipped work",
+      summary:
+        "Added a fullscreen celebration when merged work is archived, with a dismiss button and support for reduced motion.",
+    },
+  ],
+};
