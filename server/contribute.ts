@@ -1,5 +1,10 @@
 import type { PluginHookContext, PluginServerContext } from "@getpaseo/plugin/server";
-import { pollCelebrations } from "../shared/celebration";
+import {
+  diagnoseCelebration,
+  pollCelebrations,
+  previewCelebration,
+  reportCelebration,
+} from "../shared/celebration";
 import { createBroker } from "./broker";
 import { captureDirectory, identify, resolveCelebration, type Identity } from "./github";
 export function contributeServer(server: PluginServerContext) {
@@ -55,7 +60,19 @@ export function contributeServer(server: PluginServerContext) {
   server.handle(pollCelebrations, async (input, { paseo }) => {
     await observe(paseo);
     if (input.baseline) console.info("[merge-celebration] Desktop/browser client ready");
-    return broker.poll(input);
+    const response = broker.poll(input);
+    for (const event of response.events) console.info("[merge-celebration] Delivered", event.id);
+    return response;
+  });
+  server.handle(reportCelebration, ({ id }) => {
+    console.info("[merge-celebration] Rendered", id);
+    return {};
+  });
+  server.handle(diagnoseCelebration, ({ preview }) => {
+    const audience = broker.audience();
+    const previewId = preview ? `diagnostic-preview-${Date.now()}` : null;
+    if (previewId) broker.publish({ ...previewCelebration, id: previewId }, audience);
+    return { clients: audience.size, previewId };
   });
   const removeCreated = server.on("workspace.created", ({ workspace }) => {
     const pending = captureDirectory(workspace.cwd, lifetime.signal);
@@ -72,6 +89,12 @@ export function contributeServer(server: PluginServerContext) {
       return;
     handled.add(workspace.id);
     const audience = broker.audience();
+    console.info(
+      "[merge-celebration] Archive observed",
+      workspace.id,
+      "live clients",
+      audience.size,
+    );
     const pending = identities.get(workspace.id);
     identities.delete(workspace.id);
     if (audience.size === 0) return;
@@ -85,7 +108,16 @@ export function contributeServer(server: PluginServerContext) {
         return;
       }
       const event = await resolveCelebration({ workspace, identity, signal: lifetime.signal });
-      if (event && !lifetime.signal.aborted) broker.publish(event, audience);
+      console.info(
+        "[merge-celebration] Merge decision",
+        workspace.id,
+        JSON.stringify(identity),
+        event ? "verified" : "not eligible",
+      );
+      if (event && !lifetime.signal.aborted) {
+        broker.publish(event, audience);
+        console.info("[merge-celebration] Published", event.id);
+      }
     } catch (error) {
       if (!signal.aborted && !lifetime.signal.aborted)
         console.error(

@@ -1,7 +1,7 @@
 {
   "name": "paseo-merge-celebration",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.1.0",
   "files": [
     "paseo-plugin.json",
     "OVERVIEW.md",
@@ -10,14 +10,17 @@
     "client/",
     "server/",
     "shared/",
-    "README.md"
+    "README.md",
+    "DEVELOPMENT.md",
+    "docs/celebration-preview.png"
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/core.test.ts tests/events.test.ts",
+    "test": "tsx --test tests/core.test.ts tests/events.test.ts tests/confetti.test.ts",
     "test:ui": "playwright test --config tests/playwright.config.ts",
     "preview": "vite --config tests/vite.config.ts",
-    "test:archive": "tsx tests/run-archive-integration.ts"
+    "test:archive": "tsx tests/run-archive-integration.ts",
+    "screenshot": "tsx tests/capture-marketing.ts"
   },
   "devDependencies": {
     "@getpaseo/plugin": "0.11.2",

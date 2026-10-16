@@ -1,27 +1,34 @@
 
-> paseo-merge-celebration@0.2.1 test
-> tsx --test tests/core.test.ts tests/events.test.ts
+> paseo-merge-celebration@0.1.0 test
+> tsx --test tests/core.test.ts tests/events.test.ts tests/confetti.test.ts
 
-✔ celebrates an exact merged PR and includes a linked issue recap (1.7255ms)
-✔ manual archives of open, closed, mismatched or subsequently merged work stay silent (0.181208ms)
-✔ live mailboxes deliver once and discard offline, reconnect and restarted history (0.123125ms)
-✔ dismissed events cannot replay, and preview can run again with a new ID (0.066167ms)
-✔ GitHub parsing and recaps do not render scripts, images or code (0.058291ms)
+✔ confetti starts empty and enters from above instead of filling the screen immediately (0.966583ms)
+✔ gravity, air resistance and individual tumbling produce varied finite motion (0.991208ms)
+✔ dismissal stops births while existing particles keep falling until fully offscreen (1.585959ms)
+✔ motion stays consistent at different frame rates and recovers without jumping after a stall (0.799208ms)
+✔ emission stays bounded, particles never wrap upward, and a fresh celebration starts empty (15.602416ms)
+✔ tall desktop windows keep receiving fresh confetti without saturating the particle budget (32.737125ms)
+✔ celebrates an exact merged PR and includes a linked issue recap (1.919916ms)
+✔ manual archives of open, closed, mismatched or subsequently merged work stay silent (0.185292ms)
+✔ live mailboxes deliver once and discard offline, reconnect and restarted history (0.1445ms)
+✔ dismissed events cannot replay, and preview can run again with a new ID (0.076625ms)
+✔ GitHub parsing and recaps do not render scripts, images or code (0.067708ms)
 [merge-celebration] Issue recap unavailable 3
-✔ merge lookup works after a real worktree is deleted and its branch survives (85.288667ms)
-✔ GitHub failures fail closed instead of producing a celebration (0.272625ms)
-✔ a missing issue title in gh PR references does not block a merged celebration (0.149208ms)
-✔ an inaccessible linked issue cannot suppress a verified merge celebration (0.15725ms)
-✔ client accepts live events but drops queued events after a restored snapshot (0.767375ms)
-✔ an RPC error establishes a fresh baseline instead of replaying its queued event (0.203708ms)
-✔ queued events cannot replay while a reconnect snapshot is delayed (0.158958ms)
-✔ an in-flight response from a disconnected subscription is discarded (0.16475ms)
-✔ a terminal watcher error reacquires observation before accepting new live events (0.163ms)
-ℹ tests 14
+✔ merge lookup works after a real worktree is deleted and its branch survives (107.098833ms)
+✔ GitHub failures fail closed instead of producing a celebration (0.290583ms)
+✔ a missing issue title in gh PR references does not block a merged celebration (0.178ms)
+✔ an inaccessible linked issue cannot suppress a verified merge celebration (0.168292ms)
+✔ client accepts live events but drops queued events after a restored snapshot (1.135042ms)
+✔ an RPC error establishes a fresh baseline instead of replaying its queued event (0.188958ms)
+✔ a reconnect discards a received celebration that may still be waiting for a visible window (0.125333ms)
+✔ queued events cannot replay while a reconnect snapshot is delayed (0.162959ms)
+✔ an in-flight response from a disconnected subscription is discarded (0.1685ms)
+✔ a terminal watcher error reacquires observation before accepting new live events (0.15175ms)
+ℹ tests 21
 ℹ suites 0
-ℹ pass 14
+ℹ pass 21
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 259.358042
+ℹ duration_ms 381.725458

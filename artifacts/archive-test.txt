@@ -1,15 +1,19 @@
 
-> paseo-merge-celebration@0.2.1 test:archive
+> paseo-merge-celebration@0.1.0 test:archive
 > tsx tests/run-archive-integration.ts
 
 
  RUN  v4.1.6 /private/tmp/paseo-merge-research/paseo/packages/server
 
-(node:23548) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(node:296) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
+Switched to a new branch 'main'
+(node:7078) [DEP0205] DeprecationWarning: `module.register()` is deprecated. Use `module.registerHooks()` instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Switched to a new branch 'main'
 
  Test Files  1 passed (1)
-      Tests  1 passed (1)
-   Start at  18:04:21
-   Duration  10.15s (transform 3.33s, setup 18ms, import 4.25s, tests 5.77s, environment 0ms)
+      Tests  2 passed (2)
+   Start at  22:58:38
+   Duration  22.66s (transform 3.62s, setup 20ms, import 4.57s, tests 17.95s, environment 0ms)
 

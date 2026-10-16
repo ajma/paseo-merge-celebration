@@ -121,6 +121,23 @@ test("an RPC error establishes a fresh baseline instead of replaying its queued 
     stop();
   }
 });
+test("a reconnect discards a received celebration that may still be waiting for a visible window", async (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const stream = connection();
+  const store = createCelebrationStore();
+  const stop = startLiveEvents(stream.client, store);
+  try {
+    await flush();
+    stream.broker.publish(previewCelebration, stream.broker.audience());
+    t.mock.timers.tick(1000);
+    await flush();
+    assert.equal(store.getSnapshot()?.id, "preview");
+    stream.restore();
+    assert.equal(store.getSnapshot(), null);
+  } finally {
+    stop();
+  }
+});
 
 test("queued events cannot replay while a reconnect snapshot is delayed", async (t) => {
   t.mock.timers.enable({ apis: ["setTimeout"] });

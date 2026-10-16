@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   AccessibilityInfo,
-  Animated,
-  Easing,
   Pressable,
   ScrollView,
   Text,
@@ -11,14 +9,7 @@ import {
 } from "react-native";
 import type { PluginHostProps } from "@getpaseo/plugin/client";
 import type { CelebrationStore } from "./store";
-const COLORS = ["#ff578f", "#ffc857", "#50dfb1", "#6da9ff", "#b391ff", "#ff9357"];
-const PIECES = Array.from({ length: 72 }, (_, id) => ({
-  id,
-  left: `${(id * 37.13) % 100}%` as `${number}%`,
-  delay: (id % 12) * 90,
-  color: COLORS[id % COLORS.length],
-  rotate: `${id * 51}deg`,
-}));
+import { Confetti } from "./confetti.web";
 function useReducedMotion() {
   const [reduced, setReduced] = useState(true);
   useEffect(() => {
@@ -36,88 +27,35 @@ function useReducedMotion() {
   }, []);
   return reduced;
 }
-function Confetti({ height }: { height: number }) {
-  const progress = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    const animation = Animated.timing(progress, {
-      toValue: 1,
-      duration: 4800,
-      easing: Easing.linear,
-      useNativeDriver: true,
-      isInteraction: false,
-    });
-    animation.start();
-    return () => animation.stop();
-  }, [progress]);
-  return (
-    <View
-      testID="confetti"
-      pointerEvents="none"
-      accessibilityElementsHidden
-      importantForAccessibility="no-hide-descendants"
-      style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, overflow: "hidden" }}
-    >
-      {PIECES.map((piece) => (
-        <Animated.View
-          key={piece.id}
-          style={{
-            position: "absolute",
-            top: -24,
-            left: piece.left,
-            width: 8,
-            height: piece.id % 2 ? 14 : 8,
-            borderRadius: 2,
-            backgroundColor: piece.color,
-            opacity: progress.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0] }),
-            transform: [
-              {
-                translateY: progress.interpolate({
-                  inputRange: [piece.delay / 6000, 1],
-                  outputRange: [0, height + 100],
-                  extrapolate: "clamp",
-                }),
-              },
-              {
-                translateX: progress.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, piece.id % 2 ? 100 : -100],
-                }),
-              },
-              {
-                rotate: progress.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [piece.rotate, `${piece.id * 51 + 540}deg`],
-                }),
-              },
-            ],
-          }}
-        />
-      ))}
-    </View>
-  );
-}
 export function CelebrationOverlay({
   theme,
   layout,
   store,
 }: Pick<PluginHostProps, "theme" | "layout"> & { store: CelebrationStore }) {
   const event = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const motionGeneration = useSyncExternalStore(
+    store.subscribe,
+    store.getMotionGeneration,
+    store.getMotionGeneration,
+  );
   const reduced = useReducedMotion();
-  const { height } = useWindowDimensions();
-  useEffect(() => {
-    if (!event) return;
-    const timer = setTimeout(store.dismiss, 16_000);
-    return () => clearTimeout(timer);
-  }, [event, store]);
+  const { width, height } = useWindowDimensions();
   return (
     <>
+      {!reduced && (
+        <Confetti
+          key={motionGeneration}
+          eventId={event?.id ?? null}
+          width={width}
+          height={height}
+        />
+      )}
       {event && (
         <View
           testID="celebration-overlay"
           pointerEvents="box-none"
           style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
         >
-          {!reduced && <Confetti key={event.id} height={height} />}
           <View
             pointerEvents="box-none"
             style={{

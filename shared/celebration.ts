@@ -13,6 +13,16 @@ export const pollCelebrations = defineRpc({
   input: z.object({ session: z.string().min(1).max(100), baseline: z.boolean() }),
   output: z.object({ events: z.array(celebrationSchema) }),
 });
+export const reportCelebration = defineRpc({
+  name: "celebrations.presented",
+  input: z.object({ id: z.string().min(1).max(300) }),
+  output: z.object({}),
+});
+export const diagnoseCelebration = defineRpc({
+  name: "celebrations.diagnose",
+  input: z.object({ preview: z.boolean() }),
+  output: z.object({ clients: z.number().int(), previewId: z.string().nullable() }),
+});
 export const previewCelebration: Celebration = {
   id: "preview",
   workspaceName: "Celebration preview",

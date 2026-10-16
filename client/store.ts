@@ -1,6 +1,7 @@
 import type { Celebration } from "../shared/celebration";
 export function createCelebrationStore() {
   let current: Celebration | null = null;
+  let motionGeneration = 0;
   const listeners = new Set<() => void>();
   const seen = new Set<string>();
   function publish() {
@@ -8,6 +9,7 @@ export function createCelebrationStore() {
   }
   return {
     getSnapshot: () => current,
+    getMotionGeneration: () => motionGeneration,
     subscribe(listener: () => void) {
       listeners.add(listener);
       return () => {
@@ -24,8 +26,14 @@ export function createCelebrationStore() {
       current = null;
       publish();
     },
+    cancel() {
+      current = null;
+      motionGeneration += 1;
+      publish();
+    },
     clear() {
       current = null;
+      motionGeneration += 1;
       seen.clear();
       publish();
       listeners.clear();

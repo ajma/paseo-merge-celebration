@@ -1,19 +1,24 @@
 
-> paseo-merge-celebration@0.2.1 test:ui
+> paseo-merge-celebration@0.1.0 test:ui
 > playwright test --config tests/playwright.config.ts
 
-[WebServer] (node:23242) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:22219) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
-[WebServer] (node:23268) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:22357) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
 
-Running 4 tests using 1 worker
+Running 9 tests using 1 worker
 
-(node:23274) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:22373) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
-  ✓  1 tests/browser/celebration.spec.ts:4:5 › preview keeps the screen usable; compact=false reduced=false (1.7s)
-  ✓  2 tests/browser/celebration.spec.ts:4:5 › preview keeps the screen usable; compact=false reduced=true (484ms)
-  ✓  3 tests/browser/celebration.spec.ts:4:5 › preview keeps the screen usable; compact=true reduced=false (1.4s)
-  ✓  4 tests/browser/celebration.spec.ts:4:5 › preview keeps the screen usable; compact=true reduced=true (516ms)
+  ✓  1 tests/browser/celebration.spec.ts:18:1 › a fresh shower starts empty, then enters from the top (1.2s)
+  ✓  2 tests/browser/celebration.spec.ts:34:1 › dismissal removes the recap while existing confetti finishes falling (2.0s)
+  ✓  3 tests/browser/celebration.spec.ts:54:1 › reconnecting cancels the old shower immediately instead of preserving its tail (574ms)
+  ✓  4 tests/browser/celebration.spec.ts:67:1 › confetti keeps falling until dismissal and respects live reduced-motion changes (5.3s)
+  ✓  5 tests/browser/celebration.spec.ts:89:1 › a celebration received while hidden starts when the same window becomes visible (296ms)
+  ✓  6 tests/browser/celebration.spec.ts:128:5 › preview keeps the screen usable; compact=false reduced=false (2.4s)
+  ✓  7 tests/browser/celebration.spec.ts:128:5 › preview keeps the screen usable; compact=false reduced=true (468ms)
+  ✓  8 tests/browser/celebration.spec.ts:128:5 › preview keeps the screen usable; compact=true reduced=false (2.4s)
+  ✓  9 tests/browser/celebration.spec.ts:128:5 › preview keeps the screen usable; compact=true reduced=true (447ms)
 
-  4 passed (6.2s)
+  9 passed (16.7s)

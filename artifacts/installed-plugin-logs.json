@@ -322,5 +322,329 @@
     "timestamp": "2026-10-16T01:05:54.565Z",
     "stream": "stdout",
     "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 55,
+    "timestamp": "2026-10-16T03:48:32.075Z",
+    "stream": "stdout",
+    "message": "[paseo] Stopping plugin"
+  },
+  {
+    "sequence": 56,
+    "timestamp": "2026-10-16T03:48:32.133Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin stopped"
+  },
+  {
+    "sequence": 57,
+    "timestamp": "2026-10-16T03:48:32.133Z",
+    "stream": "stdout",
+    "message": "[paseo] Loading plugin"
+  },
+  {
+    "sequence": 58,
+    "timestamp": "2026-10-16T03:48:32.394Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin ready"
+  },
+  {
+    "sequence": 59,
+    "timestamp": "2026-10-16T03:48:32.477Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 60,
+    "timestamp": "2026-10-16T03:48:32.477Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 61,
+    "timestamp": "2026-10-16T03:48:33.479Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Delivered diagnostic-preview-1792122513175"
+  },
+  {
+    "sequence": 62,
+    "timestamp": "2026-10-16T03:48:33.485Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered diagnostic-preview-1792122513175"
+  },
+  {
+    "sequence": 63,
+    "timestamp": "2026-10-16T03:48:33.813Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Delivered diagnostic-preview-1792122513175"
+  },
+  {
+    "sequence": 64,
+    "timestamp": "2026-10-16T03:48:33.846Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered diagnostic-preview-1792122513175"
+  },
+  {
+    "sequence": 65,
+    "timestamp": "2026-10-16T03:49:43.513Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Archive observed wks_6c52987e007dad61 live clients 2"
+  },
+  {
+    "sequence": 66,
+    "timestamp": "2026-10-16T03:49:43.928Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Merge decision wks_6c52987e007dad61 {\"root\":\"/private/var/folders/qn/n9kbgyj55gb0d_lfrtqkp37c0000gn/T/paseo-merge-archive-probe-ts13cgyr/repository\",\"branch\":\"solos-hotspot-autoconnect-feature-flag\",\"repository\":\"noosphereai/noosphere\",\"prNumber\":6474} verified"
+  },
+  {
+    "sequence": 67,
+    "timestamp": "2026-10-16T03:49:43.928Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Published wks_6c52987e007dad61:2026-10-16T03:49:43.509Z"
+  },
+  {
+    "sequence": 68,
+    "timestamp": "2026-10-16T03:49:44.718Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Delivered wks_6c52987e007dad61:2026-10-16T03:49:43.509Z"
+  },
+  {
+    "sequence": 69,
+    "timestamp": "2026-10-16T03:49:44.725Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered wks_6c52987e007dad61:2026-10-16T03:49:43.509Z"
+  },
+  {
+    "sequence": 70,
+    "timestamp": "2026-10-16T03:49:44.814Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Delivered wks_6c52987e007dad61:2026-10-16T03:49:43.509Z"
+  },
+  {
+    "sequence": 71,
+    "timestamp": "2026-10-16T03:49:44.832Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered wks_6c52987e007dad61:2026-10-16T03:49:43.509Z"
+  },
+  {
+    "sequence": 72,
+    "timestamp": "2026-10-16T03:54:21.313Z",
+    "stream": "stdout",
+    "message": "[paseo] Stopping plugin"
+  },
+  {
+    "sequence": 73,
+    "timestamp": "2026-10-16T03:54:21.327Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin stopped"
+  },
+  {
+    "sequence": 74,
+    "timestamp": "2026-10-16T03:54:21.327Z",
+    "stream": "stdout",
+    "message": "[paseo] Loading plugin"
+  },
+  {
+    "sequence": 75,
+    "timestamp": "2026-10-16T03:54:21.589Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin ready"
+  },
+  {
+    "sequence": 76,
+    "timestamp": "2026-10-16T03:54:21.674Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 77,
+    "timestamp": "2026-10-16T03:54:21.674Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 78,
+    "timestamp": "2026-10-16T03:54:33.701Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Delivered diagnostic-preview-1792122873696"
+  },
+  {
+    "sequence": 79,
+    "timestamp": "2026-10-16T03:54:33.702Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered diagnostic-preview-1792122873696"
+  },
+  {
+    "sequence": 80,
+    "timestamp": "2026-10-16T03:54:33.813Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Delivered diagnostic-preview-1792122873696"
+  },
+  {
+    "sequence": 81,
+    "timestamp": "2026-10-16T05:24:38.169Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Archive observed wks_090b3fde52918297 live clients 2"
+  },
+  {
+    "sequence": 82,
+    "timestamp": "2026-10-16T05:24:38.609Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Merge decision wks_090b3fde52918297 {\"root\":\"/Users/ajma/workspace/noosphere\",\"branch\":\"feat/android-release-train\",\"repository\":\"noosphereai/noosphere\",\"prNumber\":6362} verified"
+  },
+  {
+    "sequence": 83,
+    "timestamp": "2026-10-16T05:24:38.609Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Published wks_090b3fde52918297:2026-10-16T05:24:38.158Z"
+  },
+  {
+    "sequence": 84,
+    "timestamp": "2026-10-16T05:24:38.801Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Delivered wks_090b3fde52918297:2026-10-16T05:24:38.158Z"
+  },
+  {
+    "sequence": 85,
+    "timestamp": "2026-10-16T05:24:38.931Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Delivered wks_090b3fde52918297:2026-10-16T05:24:38.158Z"
+  },
+  {
+    "sequence": 86,
+    "timestamp": "2026-10-16T05:24:38.935Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered wks_090b3fde52918297:2026-10-16T05:24:38.158Z"
+  },
+  {
+    "sequence": 87,
+    "timestamp": "2026-10-16T05:40:00.186Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered preview-1792129200139-0.8321405909418351"
+  },
+  {
+    "sequence": 88,
+    "timestamp": "2026-10-16T05:44:56.815Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered preview-1792129496756-0.7522502372241545"
+  },
+  {
+    "sequence": 89,
+    "timestamp": "2026-10-16T05:45:54.568Z",
+    "stream": "stdout",
+    "message": "[paseo] Stopping plugin"
+  },
+  {
+    "sequence": 90,
+    "timestamp": "2026-10-16T05:45:54.610Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin stopped"
+  },
+  {
+    "sequence": 91,
+    "timestamp": "2026-10-16T05:45:54.610Z",
+    "stream": "stdout",
+    "message": "[paseo] Loading plugin"
+  },
+  {
+    "sequence": 92,
+    "timestamp": "2026-10-16T05:45:54.876Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin ready"
+  },
+  {
+    "sequence": 93,
+    "timestamp": "2026-10-16T05:45:54.961Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 94,
+    "timestamp": "2026-10-16T05:45:54.961Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 95,
+    "timestamp": "2026-10-16T05:48:17.834Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered preview-1792129697785-0.62281599384558"
+  },
+  {
+    "sequence": 96,
+    "timestamp": "2026-10-16T05:48:32.035Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered preview-1792129712001-0.12616497546832584"
+  },
+  {
+    "sequence": 97,
+    "timestamp": "2026-10-16T05:49:08.590Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered preview-1792129748542-0.5406186214555181"
+  },
+  {
+    "sequence": 98,
+    "timestamp": "2026-10-16T05:57:13.703Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered preview-1792130233671-0.5686278825767532"
+  },
+  {
+    "sequence": 99,
+    "timestamp": "2026-10-16T05:58:02.382Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered preview-1792130282348-0.8749163884972474"
+  },
+  {
+    "sequence": 100,
+    "timestamp": "2026-10-16T06:05:56.763Z",
+    "stream": "stdout",
+    "message": "[paseo] Stopping plugin"
+  },
+  {
+    "sequence": 101,
+    "timestamp": "2026-10-16T06:05:56.808Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin stopped"
+  },
+  {
+    "sequence": 102,
+    "timestamp": "2026-10-16T06:05:56.808Z",
+    "stream": "stdout",
+    "message": "[paseo] Loading plugin"
+  },
+  {
+    "sequence": 103,
+    "timestamp": "2026-10-16T06:05:57.093Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin ready"
+  },
+  {
+    "sequence": 104,
+    "timestamp": "2026-10-16T06:05:57.188Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 105,
+    "timestamp": "2026-10-16T06:05:57.188Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 106,
+    "timestamp": "2026-10-16T06:06:24.690Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Delivered diagnostic-preview-1792130784404"
+  },
+  {
+    "sequence": 107,
+    "timestamp": "2026-10-16T06:06:24.692Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Rendered diagnostic-preview-1792130784404"
+  },
+  {
+    "sequence": 108,
+    "timestamp": "2026-10-16T06:06:24.798Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Delivered diagnostic-preview-1792130784404"
   }
 ]

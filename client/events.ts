@@ -16,6 +16,7 @@ export function startLiveEvents(
   let subscriptionId = (): string | null => null;
   let observationFailed = false;
   function reset() {
+    store.cancel();
     generation += 1;
     baseline = true;
     session = `client-${Date.now()}-${Math.random().toString(36).slice(2)}`;

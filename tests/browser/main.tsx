@@ -5,6 +5,7 @@ import type { PluginClientContext, PluginHostProps } from "@getpaseo/plugin/clie
 import contribute from "../../index.client";
 let Bridge: ComponentType<PluginHostProps>;
 let preview: () => void;
+let restoreSnapshot = () => {};
 const host = { id: "test", label: "Test host" };
 const pluginContext = {
   addSidebarFooterItem({ Component }: { Component: ComponentType<PluginHostProps> }) {
@@ -18,6 +19,7 @@ const pluginContext = {
           subscription: {
             subscriptionId: "browser-epoch",
             subscribe({ snapshot }: { snapshot: () => void }) {
+              restoreSnapshot = snapshot;
               snapshot();
               return () => {};
             },
@@ -27,7 +29,11 @@ const pluginContext = {
       },
     },
   },
-  async rpc() {
+  async rpc(contract: { name: string }, input: { id?: string }) {
+    if (contract.name === "celebrations.presented") {
+      document.body.setAttribute("data-presented-celebration", input.id!);
+      return {};
+    }
     return { events: [] };
   },
   addCommandCenterItem({ onSelect }: { onSelect: () => void }) {
@@ -95,6 +101,13 @@ function App() {
         </Pressable>
         <Pressable accessibilityRole="button" accessibilityLabel="Unload plugin" onPress={cleanup}>
           <Text style={{ color: theme.colors.foreground }}>Unload plugin</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Reconnect host"
+          onPress={() => restoreSnapshot()}
+        >
+          <Text style={{ color: theme.colors.foreground }}>Reconnect host</Text>
         </Pressable>
       </View>
       <Bridge host={host} layout={{ compact, platform: "web" }} theme={theme} />
