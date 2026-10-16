@@ -1,0 +1,28 @@
+[
+  {
+    "id": "issues-workspaces",
+    "path": "/Users/ajma/.paseo/worktrees/0dznyas7/solid-alpacka",
+    "enabled": true,
+    "status": "running",
+    "installation": {
+      "identity": {
+        "kind": "directory",
+        "path": "/Users/ajma/.paseo/worktrees/0dznyas7/solid-alpacka"
+      }
+    }
+  },
+  {
+    "id": "paseo-merge-celebration",
+    "path": "/Users/ajma/workspace/paseo-merge-celebration",
+    "enabled": true,
+    "status": "running",
+    "name": "Merge celebration",
+    "description": "Celebrate archived GitHub workspaces after their pull requests merge. Desktop and browser clients only; no app changes required.",
+    "installation": {
+      "identity": {
+        "kind": "directory",
+        "path": "/Users/ajma/workspace/paseo-merge-celebration"
+      }
+    }
+  }
+]

@@ -1,0 +1,60 @@
+{
+  "home": "/Users/ajma/.paseo",
+  "pid": 9903,
+  "startedAt": "2026-10-09T19:35:28.366Z",
+  "listen": "127.0.0.1:6767",
+  "serverId": "srv_RkwlmvwpztKY",
+  "hostname": "Andrew’s MacBook Air",
+  "configuredListen": "127.0.0.1:6767",
+  "localDaemon": "running",
+  "desktopManaged": true,
+  "logPath": "/Users/ajma/.paseo/daemon.log",
+  "daemonVersion": "0.11.2",
+  "workerPid": 9905,
+  "daemonNode": "/Applications/Paseo.app/Contents/Frameworks/Paseo Helper.app/Contents/MacOS/Paseo Helper",
+  "providers": [
+    {
+      "provider": "claude",
+      "available": true,
+      "error": null
+    },
+    {
+      "provider": "codex",
+      "available": true,
+      "error": null
+    },
+    {
+      "provider": "copilot",
+      "available": false,
+      "error": null
+    },
+    {
+      "provider": "opencode",
+      "available": false,
+      "error": null
+    },
+    {
+      "provider": "pi",
+      "available": false,
+      "error": null
+    },
+    {
+      "provider": "antigravity",
+      "available": false,
+      "error": null
+    },
+    {
+      "provider": "muse",
+      "available": false,
+      "error": null
+    }
+  ],
+  "relay": {
+    "enabled": true,
+    "endpoint": "relay.paseo.sh:443",
+    "publicEndpoint": "relay.paseo.sh:443",
+    "useTls": true,
+    "publicUseTls": true
+  },
+  "connectedDaemon": "reachable"
+}

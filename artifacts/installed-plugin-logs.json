@@ -1,0 +1,326 @@
+[
+  {
+    "sequence": 1,
+    "timestamp": "2026-10-15T22:27:48.079Z",
+    "stream": "stdout",
+    "message": "[paseo] Loading plugin"
+  },
+  {
+    "sequence": 2,
+    "timestamp": "2026-10-15T22:27:48.351Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin ready"
+  },
+  {
+    "sequence": 3,
+    "timestamp": "2026-10-15T22:27:48.423Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 4,
+    "timestamp": "2026-10-15T22:27:48.423Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 5,
+    "timestamp": "2026-10-15T22:32:38.752Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 6,
+    "timestamp": "2026-10-15T22:32:38.995Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 7,
+    "timestamp": "2026-10-15T22:42:36.182Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 8,
+    "timestamp": "2026-10-15T22:42:36.660Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 9,
+    "timestamp": "2026-10-15T22:52:47.660Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 10,
+    "timestamp": "2026-10-15T22:52:57.035Z",
+    "stream": "stderr",
+    "message": "[merge-celebration] Merge verification failed wks_2f9b32c5b3a06be1 ["
+  },
+  {
+    "sequence": 11,
+    "timestamp": "2026-10-15T22:52:57.035Z",
+    "stream": "stderr",
+    "message": "  {"
+  },
+  {
+    "sequence": 12,
+    "timestamp": "2026-10-15T22:52:57.036Z",
+    "stream": "stderr",
+    "message": "    \"expected\": \"string\","
+  },
+  {
+    "sequence": 13,
+    "timestamp": "2026-10-15T22:52:57.036Z",
+    "stream": "stderr",
+    "message": "    \"code\": \"invalid_type\","
+  },
+  {
+    "sequence": 14,
+    "timestamp": "2026-10-15T22:52:57.037Z",
+    "stream": "stderr",
+    "message": "    \"path\": ["
+  },
+  {
+    "sequence": 15,
+    "timestamp": "2026-10-15T22:52:57.037Z",
+    "stream": "stderr",
+    "message": "      \"closingIssuesReferences\","
+  },
+  {
+    "sequence": 16,
+    "timestamp": "2026-10-15T22:52:57.037Z",
+    "stream": "stderr",
+    "message": "      0,"
+  },
+  {
+    "sequence": 17,
+    "timestamp": "2026-10-15T22:52:57.037Z",
+    "stream": "stderr",
+    "message": "      \"title\""
+  },
+  {
+    "sequence": 18,
+    "timestamp": "2026-10-15T22:52:57.037Z",
+    "stream": "stderr",
+    "message": "    ],"
+  },
+  {
+    "sequence": 19,
+    "timestamp": "2026-10-15T22:52:57.037Z",
+    "stream": "stderr",
+    "message": "    \"message\": \"Invalid input: expected string, received undefined\""
+  },
+  {
+    "sequence": 20,
+    "timestamp": "2026-10-15T22:52:57.037Z",
+    "stream": "stderr",
+    "message": "  }"
+  },
+  {
+    "sequence": 21,
+    "timestamp": "2026-10-15T22:52:57.037Z",
+    "stream": "stderr",
+    "message": "]"
+  },
+  {
+    "sequence": 22,
+    "timestamp": "2026-10-15T22:52:57.173Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 23,
+    "timestamp": "2026-10-15T22:53:00.171Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 24,
+    "timestamp": "2026-10-15T22:53:00.544Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 25,
+    "timestamp": "2026-10-15T23:03:00.568Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 26,
+    "timestamp": "2026-10-15T23:03:00.726Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 27,
+    "timestamp": "2026-10-15T23:35:33.695Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 28,
+    "timestamp": "2026-10-15T23:35:33.731Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 29,
+    "timestamp": "2026-10-15T23:53:00.189Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 30,
+    "timestamp": "2026-10-15T23:53:00.304Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 31,
+    "timestamp": "2026-10-16T00:06:17.031Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 32,
+    "timestamp": "2026-10-16T00:06:18.378Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 33,
+    "timestamp": "2026-10-16T00:18:35.534Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 34,
+    "timestamp": "2026-10-16T00:28:32.827Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 35,
+    "timestamp": "2026-10-16T00:33:28.593Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 36,
+    "timestamp": "2026-10-16T00:33:28.981Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 37,
+    "timestamp": "2026-10-16T00:59:47.310Z",
+    "stream": "stderr",
+    "message": "[merge-celebration] Merge verification failed wks_4013dc5966fb3dfe ["
+  },
+  {
+    "sequence": 38,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "  {"
+  },
+  {
+    "sequence": 39,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "    \"expected\": \"string\","
+  },
+  {
+    "sequence": 40,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "    \"code\": \"invalid_type\","
+  },
+  {
+    "sequence": 41,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "    \"path\": ["
+  },
+  {
+    "sequence": 42,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "      \"closingIssuesReferences\","
+  },
+  {
+    "sequence": 43,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "      0,"
+  },
+  {
+    "sequence": 44,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "      \"title\""
+  },
+  {
+    "sequence": 45,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "    ],"
+  },
+  {
+    "sequence": 46,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "    \"message\": \"Invalid input: expected string, received undefined\""
+  },
+  {
+    "sequence": 47,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "  }"
+  },
+  {
+    "sequence": 48,
+    "timestamp": "2026-10-16T00:59:47.311Z",
+    "stream": "stderr",
+    "message": "]"
+  },
+  {
+    "sequence": 49,
+    "timestamp": "2026-10-16T01:05:54.089Z",
+    "stream": "stdout",
+    "message": "[paseo] Stopping plugin"
+  },
+  {
+    "sequence": 50,
+    "timestamp": "2026-10-16T01:05:54.148Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin stopped"
+  },
+  {
+    "sequence": 51,
+    "timestamp": "2026-10-16T01:05:54.148Z",
+    "stream": "stdout",
+    "message": "[paseo] Loading plugin"
+  },
+  {
+    "sequence": 52,
+    "timestamp": "2026-10-16T01:05:54.461Z",
+    "stream": "stdout",
+    "message": "[paseo] Plugin ready"
+  },
+  {
+    "sequence": 53,
+    "timestamp": "2026-10-16T01:05:54.545Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  },
+  {
+    "sequence": 54,
+    "timestamp": "2026-10-16T01:05:54.565Z",
+    "stream": "stdout",
+    "message": "[merge-celebration] Desktop/browser client ready"
+  }
+]

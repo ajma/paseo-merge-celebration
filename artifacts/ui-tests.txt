@@ -1,0 +1,19 @@
+
+> paseo-merge-celebration@0.2.1 test:ui
+> playwright test --config tests/playwright.config.ts
+
+[WebServer] (node:23242) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:23268) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 4 tests using 1 worker
+
+(node:23274) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/browser/celebration.spec.ts:4:5 › preview keeps the screen usable; compact=false reduced=false (1.7s)
+  ✓  2 tests/browser/celebration.spec.ts:4:5 › preview keeps the screen usable; compact=false reduced=true (484ms)
+  ✓  3 tests/browser/celebration.spec.ts:4:5 › preview keeps the screen usable; compact=true reduced=false (1.4s)
+  ✓  4 tests/browser/celebration.spec.ts:4:5 › preview keeps the screen usable; compact=true reduced=true (516ms)
+
+  4 passed (6.2s)

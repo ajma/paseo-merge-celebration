@@ -1,0 +1,5 @@
+Merge celebration plays colorful confetti across your current Paseo desktop or browser window when a workspace is archived after its GitHub pull request has merged. A recap shows the PR title and excerpts from up to three linked closing issues. Dismiss it immediately, or let it close after 16 seconds. Preview merge celebration is available in the Command Center.
+
+Works with the stock Paseo 0.11.2 desktop/browser client and daemon. No app patch, rebuild or daemon restart is needed. Git and an authenticated GitHub CLI must be available on the daemon machine. Native iOS and Android clients do not contribute celebration UI. The fullscreen layer uses browser-specific mounting from the plugin; Paseo does not provide a portable global overlay API.
+
+Open, closed without merging, mismatched and unverifiable PRs stay silent. Connected clients receive live events; offline archives are discarded. Reduced motion disables falling confetti. Repository and issue reads go through the GitHub CLI to github.com using your existing credentials. Issue recaps use plain text excerpts, with no AI service.
