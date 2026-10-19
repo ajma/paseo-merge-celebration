@@ -11,7 +11,7 @@ import {
   type WorkspaceGitRuntimeSnapshot,
 } from "../workspace-git-service.js";
 
-test.each(["manual", "automatic"])(
+test.each(["manual", "automatic", "automatic-offline"])(
   "merge celebration delivers a %s archive through the live client",
   async (mode) => {
     const root = await mkdtemp(join(tmpdir(), "paseo-celebration-e2e-"));
@@ -34,7 +34,9 @@ test.each(["manual", "automatic"])(
       await cp(join(pluginPath, name), join(plugin, name), { recursive: true });
     }
     function git(...args: string[]) {
-      return execFileSync("git", ["-C", repository, ...args], { encoding: "utf8" }).trim();
+      return execFileSync("git", ["-C", repository, ...args], {
+        encoding: "utf8",
+      }).trim();
     }
     git("init", "-b", "feature");
     git(
@@ -45,7 +47,7 @@ test.each(["manual", "automatic"])(
       "commit",
       "--allow-empty",
       "-m",
-      "Feature",
+      "Feature"
     );
     git("remote", "add", "origin", "https://github.com/example/celebration-fixture.git");
     const sha = git("rev-parse", "HEAD");
@@ -58,40 +60,48 @@ test.each(["manual", "automatic"])(
       mergedAt: "2026-01-01T00:00:00Z",
       headRefOid: sha,
       closingIssuesReferences: [
-        { number: 3, url: "https://github.com/example/celebration-fixture/issues/3" },
+        {
+          number: 3,
+          url: "https://github.com/example/celebration-fixture/issues/3",
+        },
       ],
     };
     await writeFile(statePath, JSON.stringify(pr));
     const ghPath = join(bin, "gh");
     await writeFile(
       ghPath,
-      `#!${process.execPath}\nconst fs = require("fs"); const pr = JSON.parse(fs.readFileSync(${JSON.stringify(statePath)}, "utf8")); const args = process.argv.slice(2); if(pr.error) process.exit(1); console.log(JSON.stringify(args[0] === "pr" ? pr : args[1].includes("/issues/") ? {number:3,title:"Issue recap",body:"Shipped the requested change."} : [{number:7,head:{sha:pr.headRefOid}}]));\n`,
+      `#!${
+        process.execPath
+      }\nconst fs = require("fs"); const pr = JSON.parse(fs.readFileSync(${JSON.stringify(
+        statePath
+      )}, "utf8")); const args = process.argv.slice(2); if(pr.error) process.exit(1); console.log(JSON.stringify(args[0] === "pr" ? pr : args[1].includes("/issues/") ? {number:3,title:"Issue recap",body:"Shipped the requested change."} : [{number:7,head:{sha:pr.headRefOid}}]));\n`
     );
     await chmod(ghPath, 0o755);
     process.env.PATH = `${bin}:${previousPath}`;
     const listeners: Array<(snapshot: WorkspaceGitRuntimeSnapshot) => void> = [];
     let mergedSnapshot: WorkspaceGitRuntimeSnapshot | undefined;
-    if (mode === "automatic") {
+    if (mode.startsWith("automatic")) {
       const observe = WorkspaceGitServiceImpl.prototype.onSnapshotUpdated;
-      vi.spyOn(WorkspaceGitServiceImpl.prototype, "onSnapshotUpdated").mockImplementation(
-        function (listener) {
-          listeners.push(listener);
-          return observe.call(this, listener);
-        },
-      );
+      vi.spyOn(WorkspaceGitServiceImpl.prototype, "onSnapshotUpdated").mockImplementation(function (
+        listener
+      ) {
+        listeners.push(listener);
+        return observe.call(this, listener);
+      });
       const getSnapshot = WorkspaceGitServiceImpl.prototype.getSnapshot;
-      vi.spyOn(WorkspaceGitServiceImpl.prototype, "getSnapshot").mockImplementation(
-        function (cwd, options) {
-          if (options?.reason === "auto-archive-on-merge" && mergedSnapshot)
-            return Promise.resolve(mergedSnapshot);
-          return getSnapshot.call(this, cwd, options);
-        },
-      );
+      vi.spyOn(WorkspaceGitServiceImpl.prototype, "getSnapshot").mockImplementation(function (
+        cwd,
+        options
+      ) {
+        if (options?.reason === "auto-archive-on-merge" && mergedSnapshot)
+          return Promise.resolve(mergedSnapshot);
+        return getSnapshot.call(this, cwd, options);
+      });
     }
     const daemon = await createTestPaseoDaemon({
       daemonVersion: "0.11.2",
       pluginsEnabled: true,
-      autoArchiveAfterMerge: mode === "automatic",
+      autoArchiveAfterMerge: mode.startsWith("automatic"),
     });
     const client = new DaemonClient({
       url: `ws://127.0.0.1:${daemon.port}/ws`,
@@ -105,30 +115,37 @@ test.each(["manual", "automatic"])(
       expect(
         await client.invokePluginRpc("paseo-merge-celebration", "celebrations.diagnose", {
           preview: false,
-        }),
+        })
       ).toEqual({ clients: 0, previewId: null });
       git("switch", "-c", "main");
       const created = await client.createWorkspace({
-        source: { kind: "worktree", cwd: repository, action: "checkout", refName: "feature" },
+        source: {
+          kind: "worktree",
+          cwd: repository,
+          action: "checkout",
+          refName: "feature",
+        },
       });
       expect(created.error).toBeNull();
       const id = created.workspace!.id;
       const { startLiveEvents } = await import(join(pluginPath, "client/events.ts"));
       const { createCelebrationStore } = await import(join(pluginPath, "client/store.ts"));
       const store = createCelebrationStore();
-      stopEvents = startLiveEvents(
-        {
-          paseo: createPaseoApi(client),
-          rpc: (contract: { name: string }, input: unknown) =>
-            client.invokePluginRpc("paseo-merge-celebration", contract.name, input),
-        },
-        store,
-      );
+      const startEvents = () =>
+        startLiveEvents(
+          {
+            paseo: createPaseoApi(client),
+            rpc: (contract: { name: string }, input: unknown) =>
+              client.invokePluginRpc("paseo-merge-celebration", contract.name, input),
+          },
+          store
+        );
+      stopEvents = startEvents();
       await expect
         .poll(async () =>
-          (await client.getPluginLogs("paseo-merge-celebration")).some((entry) =>
-            entry.message.includes("Desktop/browser client ready"),
-          ),
+          (
+            await client.getPluginLogs("paseo-merge-celebration")
+          ).some((entry) => entry.message.includes("Desktop/browser client ready"))
         )
         .toBe(true);
       const poll = (baseline: boolean) =>
@@ -140,34 +157,74 @@ test.each(["manual", "automatic"])(
       const diagnostic = (await client.invokePluginRpc(
         "paseo-merge-celebration",
         "celebrations.diagnose",
-        { preview: true },
+        { preview: true }
       )) as { clients: number; previewId: string };
       expect(diagnostic.clients).toBe(2);
       await expect
         .poll(() => store.getSnapshot()?.id, { timeout: 5000 })
         .toBe(diagnostic.previewId);
-      expect(await poll(false)).toMatchObject({ events: [{ id: diagnostic.previewId }] });
+      expect(await poll(false)).toMatchObject({
+        events: [{ id: diagnostic.previewId }],
+      });
       store.dismiss();
-      if (mode === "automatic") {
+      await client.invokePluginRpc("paseo-merge-celebration", "celebrations.presented", {
+        id: diagnostic.previewId,
+      });
+      if (mode.endsWith("offline")) {
+        stopEvents();
+        await expect
+          .poll(
+            async () =>
+              (
+                (await client.invokePluginRpc("paseo-merge-celebration", "celebrations.diagnose", {
+                  preview: false,
+                })) as { clients: number }
+              ).clients,
+            { timeout: 6000 }
+          )
+          .toBe(0);
+      }
+      if (mode.startsWith("automatic")) {
         // Drive the actual daemon auto-archive controller at its forge observation boundary.
         // Registry mutation, lifecycle hook, cleanup, RPC and client are all real.
         mergedSnapshot = {
           cwd: created.workspace!.workspaceDirectory,
           git: { isGit: true, isDirty: false, aheadOfOrigin: 0 },
           forge: {
-            pullRequest: { url: pr.url, headRefName: "feature", isMerged: true, state: "merged" },
+            pullRequest: {
+              url: pr.url,
+              headRefName: "feature",
+              isMerged: true,
+              state: "merged",
+            },
           },
         } as WorkspaceGitRuntimeSnapshot;
         const open = {
           ...mergedSnapshot,
           forge: {
             ...mergedSnapshot.forge,
-            pullRequest: { ...mergedSnapshot.forge.pullRequest!, isMerged: false, state: "open" },
+            pullRequest: {
+              ...mergedSnapshot.forge.pullRequest!,
+              isMerged: false,
+              state: "open",
+            },
           },
         };
         for (const listener of listeners) listener(open);
         for (const listener of listeners) listener(mergedSnapshot);
       } else expect((await client.archiveWorkspace(id)).error).toBeNull();
+      if (mode.endsWith("offline")) {
+        await expect
+          .poll(
+            async () =>
+              (
+                await client.getPluginLogs("paseo-merge-celebration")
+              ).some((entry) => entry.message.includes(`Published ${id}:`)),
+            { timeout: 15000 }
+          )
+          .toBe(true);
+        stopEvents = startEvents();
+      }
       await expect
         .poll(() => poll(false), { timeout: 15_000, interval: 100 })
         .toMatchObject({
@@ -175,12 +232,19 @@ test.each(["manual", "automatic"])(
             {
               title: "Ship feature",
               issues: [
-                { number: 3, title: "Issue recap", summary: "Shipped the requested change." },
+                {
+                  number: 3,
+                  title: "Issue recap",
+                  summary: "Shipped the requested change.",
+                },
               ],
             },
           ],
         });
       await expect.poll(() => store.getSnapshot()?.title, { timeout: 5000 }).toBe("Ship feature");
+      await client.invokePluginRpc("paseo-merge-celebration", "celebrations.presented", {
+        id: store.getSnapshot()!.id,
+      });
       stopEvents();
       expect(await poll(false)).toEqual({ events: [] });
       await client.archiveWorkspace(id);
@@ -189,7 +253,7 @@ test.each(["manual", "automatic"])(
         await client.invokePluginRpc("paseo-merge-celebration", "celebrations.poll", {
           session: "reconnected",
           baseline: true,
-        }),
+        })
       ).toEqual({ events: [] });
       await client.reloadPlugin("paseo-merge-celebration");
       expect(await poll(true)).toEqual({ events: [] });
@@ -205,7 +269,7 @@ test.each(["manual", "automatic"])(
       expect(await poll(false)).toEqual({ events: [] });
       const logs = await client.getPluginLogs("paseo-merge-celebration");
       expect(logs.filter((entry) => entry.message.includes("Merge verification failed"))).toEqual(
-        [],
+        []
       );
       await writeFile(statePath, JSON.stringify({ ...pr, error: true }));
       const unavailable = await client.createWorkspace({
@@ -216,16 +280,15 @@ test.each(["manual", "automatic"])(
       await expect
         .poll(
           async () =>
-            (await client.getPluginLogs("paseo-merge-celebration")).some((entry) =>
-              entry.message.includes("Merge verification failed"),
-            ),
-          { timeout: 5000 },
+            (
+              await client.getPluginLogs("paseo-merge-celebration")
+            ).some((entry) => entry.message.includes("Merge verification failed")),
+          { timeout: 5000 }
         )
         .toBe(true);
       expect(await poll(false)).toEqual({ events: [] });
       expect(
-        (await client.listPlugins()).find((entry) => entry.id === "paseo-merge-celebration")
-          ?.status,
+        (await client.listPlugins()).find((entry) => entry.id === "paseo-merge-celebration")?.status
       ).toBe("running");
     } catch (error) {
       console.error("Plugin logs", await client.getPluginLogs("paseo-merge-celebration"));
@@ -239,5 +302,5 @@ test.each(["manual", "automatic"])(
       await rm(root, { recursive: true, force: true });
     }
   },
-  60_000,
+  60_000
 );

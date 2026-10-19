@@ -17,7 +17,7 @@ _Staged screenshot: the real celebration UI over a fictional workspace._
 - **Keep it calm.** Reduced motion gives you the recap without the animation.
 - **Make it yours.** Pick the words, the emoji and the kind of confetti you like.
 
-Unmerged work stays quiet. Each archive gets its moment, without old celebrations popping up when you reconnect.
+Unmerged work stays quiet. Missed celebrations wait for your desktop or browser to reconnect, for up to 24 hours. Once a window shows one, it will not replay on reconnect. Pending events are held in memory and clear when the plugin or daemon restarts.
 
 ## Make it yours
 

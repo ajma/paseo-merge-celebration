@@ -20,10 +20,12 @@ export function createPresentationStore() {
     },
   };
   let settings = defaultSettings;
+  let settingsReady = false;
   const listeners = new Set<() => void>();
   return {
     getSnapshot: () => theme,
     getSettings: () => settings,
+    settingsReady: () => settingsReady,
     subscribe(listener: () => void) {
       listeners.add(listener);
       return () => {
@@ -36,6 +38,7 @@ export function createPresentationStore() {
     },
     updateSettings(next: CelebrationSettings) {
       settings = next;
+      settingsReady = true;
       for (const listener of listeners) listener();
     },
   };

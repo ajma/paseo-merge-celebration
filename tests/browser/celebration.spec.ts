@@ -12,7 +12,11 @@ async function paperPixels(page: Page) {
       maxY = Math.max(maxY, Math.floor(index / 4 / canvas.width));
       signature = (signature + Math.imul(index, data[index])) >>> 0;
     }
-    return { count, maxY: maxY / (canvas.width / canvas.getBoundingClientRect().width), signature };
+    return {
+      count,
+      maxY: maxY / (canvas.width / canvas.getBoundingClientRect().width),
+      signature,
+    };
   });
 }
 test("a fresh shower starts empty, then enters from the top", async ({ page }) => {
@@ -46,7 +50,7 @@ test("dismissal removes the recap while existing confetti finishes falling", asy
   expect((await paperPixels(page)).signature).not.toBe(tail.signature);
   await page.getByRole("textbox", { name: "Editor" }).fill("Keep working during the tail");
   await expect(page.getByRole("textbox", { name: "Editor" })).toHaveValue(
-    "Keep working during the tail",
+    "Keep working during the tail"
   );
   await page.clock.runFor(15_000);
   await expect(page.getByTestId("confetti")).toHaveCount(0);
@@ -92,7 +96,10 @@ test("a celebration received while hidden starts when the same window becomes vi
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
   await page.evaluate(() => {
-    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "hidden",
+    });
     document.dispatchEvent(new Event("visibilitychange"));
   });
   await page.getByRole("button", { name: "Preview merge celebration" }).click();
@@ -109,7 +116,10 @@ test("a celebration received while hidden starts when the same window becomes vi
   await expect(page.locator("body")).toHaveAttribute("data-presented-celebration", /^preview-/);
   await expect(page.getByTestId("confetti")).toBeVisible();
   await page.evaluate(() => {
-    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "hidden" });
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "hidden",
+    });
     document.dispatchEvent(new Event("visibilitychange"));
   });
   await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
@@ -130,9 +140,11 @@ for (const compact of [false, true]) {
     }) => {
       page.on("pageerror", (error) => console.log(error.message));
       await page.setViewportSize(
-        compact ? { width: 390, height: 844 } : { width: 1280, height: 800 },
+        compact ? { width: 390, height: 844 } : { width: 1280, height: 800 }
       );
-      await page.emulateMedia({ reducedMotion: reduced ? "reduce" : "no-preference" });
+      await page.emulateMedia({
+        reducedMotion: reduced ? "reduce" : "no-preference",
+      });
       await page.goto(compact ? "/?compact" : "/");
       await page.getByRole("button", { name: "Preview merge celebration" }).click();
       await expect(page.getByTestId("celebration-overlay")).toBeVisible();
@@ -166,7 +178,9 @@ for (const compact of [false, true]) {
       await page.screenshot({
         animations: "disabled",
         timeout: 5000,
-        path: `artifacts/preview-${compact ? "compact" : "wide"}-${reduced ? "reduced" : "motion"}.png`,
+        path: `artifacts/preview-${compact ? "compact" : "wide"}-${
+          reduced ? "reduced" : "motion"
+        }.png`,
       });
       await page.getByRole("button", { name: "Dismiss celebration" }).click();
       await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
@@ -184,14 +198,74 @@ test("saved settings change the headline, issue recap and confetti", async ({ pa
   await page.goto("/");
   const set = (values: Record<string, unknown>) =>
     page.evaluate((next) => {
-      (window as unknown as { setCelebrationSettings(v: unknown): void }).setCelebrationSettings(next);
+      (window as unknown as { setCelebrationSettings(v: unknown): void }).setCelebrationSettings(
+        next
+      );
     }, values);
-  await set({ verb: "landed", emoji: "🚀", showIssues: false, confetti: false });
+  await set({
+    verb: "landed",
+    emoji: "🚀",
+    showIssues: false,
+    confetti: false,
+  });
   await page.getByRole("button", { name: "Preview merge celebration" }).click();
   await expect(page.getByRole("heading", { name: "Work landed! 🚀" })).toBeVisible();
   await expect(page.getByText("Celebrate shipped work")).toHaveCount(0);
   await expect(page.getByTestId("confetti")).toHaveCount(0);
-  await set({ verb: "committed", emoji: "none", showIssues: true, confetti: true });
+  await set({
+    verb: "committed",
+    emoji: "none",
+    showIssues: true,
+    confetti: true,
+  });
   await expect(page.getByRole("heading", { name: "Work committed!", exact: true })).toBeVisible();
   await expect(page.getByText("#42: Celebrate shipped work")).toBeVisible();
+});
+
+test("recovered events wait for saved settings and respect disabled celebrations", async ({
+  page,
+}) => {
+  await page.goto("/?settings-loading");
+  await page.evaluate(() => (window as unknown as { queueCelebration(): void }).queueCelebration());
+  await page.waitForTimeout(1200);
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+  await page.evaluate(() =>
+    (window as unknown as { setCelebrationSettings(v: unknown): void }).setCelebrationSettings({
+      enabled: false,
+    })
+  );
+  await expect(page.locator("body")).toHaveAttribute("data-presented-celebration", "recovered");
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+});
+
+test("a hidden recovered celebration survives reconnect and appears once visible", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "hidden",
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+    (window as unknown as { queueCelebration(): void }).queueCelebration();
+  });
+  await page.waitForTimeout(1200);
+  await page.getByRole("button", { name: "Reconnect host" }).click();
+  await page.waitForTimeout(1200);
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+  await expect(page.locator("body")).not.toHaveAttribute("data-presented-celebration");
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "visible",
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+  await expect(page.locator("body")).toHaveAttribute("data-presented-celebration", "recovered");
+  await page.getByRole("button", { name: "Dismiss celebration" }).click();
+  await page.getByRole("button", { name: "Reconnect host" }).click();
+  await page.waitForTimeout(1200);
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
 });

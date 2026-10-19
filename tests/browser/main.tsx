@@ -3,10 +3,13 @@ import { createRoot } from "react-dom/client";
 import { Pressable, Text, TextInput, View } from "react-native";
 import type { PluginClientContext, PluginHostProps } from "@getpaseo/plugin/client";
 import contribute from "../../index.client";
+import { createBroker } from "../../server/broker";
+import { previewCelebration } from "../../shared/celebration";
 import { setTestSettings } from "./host";
 let Bridge: ComponentType<PluginHostProps>;
 let preview: () => void;
 let restoreSnapshot = () => {};
+const broker = createBroker();
 const host = { id: "test", label: "Test host" };
 const pluginContext = {
   addSidebarFooterItem({ Component }: { Component: ComponentType<PluginHostProps> }) {
@@ -30,12 +33,16 @@ const pluginContext = {
       },
     },
   },
-  async rpc(contract: { name: string }, input: { id?: string }) {
+  async rpc(
+    contract: { name: string },
+    input: { id?: string; session: string; baseline: boolean }
+  ) {
     if (contract.name === "celebrations.presented") {
       document.body.setAttribute("data-presented-celebration", input.id!);
+      broker.presented(input.id!);
       return {};
     }
-    return { events: [] };
+    return broker.poll(input);
   },
   addCommandCenterItem({ id, onSelect }: { id: string; onSelect: () => void }) {
     if (id === "preview-celebration") preview = onSelect;
@@ -45,7 +52,10 @@ const pluginContext = {
     return () => {};
   },
 };
-Object.assign(window, { setCelebrationSettings: setTestSettings });
+Object.assign(window, {
+  setCelebrationSettings: setTestSettings,
+  queueCelebration: () => broker.publish({ ...previewCelebration, id: "recovered" }),
+});
 const cleanup = contribute(pluginContext as unknown as PluginClientContext);
 function App() {
   const [count, setCount] = useState(0);
@@ -67,7 +77,13 @@ function App() {
     },
   };
   return (
-    <View style={{ minHeight: "100%", height: "100%", backgroundColor: theme.colors.surface0 }}>
+    <View
+      style={{
+        minHeight: "100%",
+        height: "100%",
+        backgroundColor: theme.colors.surface0,
+      }}
+    >
       <View style={{ padding: 20, gap: 18 }}>
         <Text style={{ color: theme.colors.foreground, fontSize: 24 }}>
           Paseo workspace • Current screen

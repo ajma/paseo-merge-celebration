@@ -16,7 +16,7 @@
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/core.test.ts tests/events.test.ts tests/confetti.test.ts",
+    "test": "tsx --test tests/core.test.ts tests/events.test.ts tests/confetti.test.ts tests/archive.test.ts",
     "test:ui": "playwright test --config tests/playwright.config.ts",
     "preview": "vite --config tests/vite.config.ts",
     "test:archive": "tsx tests/run-archive-integration.ts",

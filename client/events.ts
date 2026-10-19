@@ -1,11 +1,26 @@
 import type { PluginClientContext } from "@getpaseo/plugin/client";
-import { pollCelebrations } from "../shared/celebration";
+import { pollCelebrations, reportCelebration } from "../shared/celebration";
 import type { CelebrationStore } from "./store";
+
+/** Send immediately; failed confirmations remain queued for the polling retry. */
+export async function reportPresented(
+  client: Pick<PluginClientContext, "rpc">,
+  store: CelebrationStore,
+  id: string
+) {
+  store.presented(id);
+  try {
+    await client.rpc(reportCelebration, { id });
+    store.acknowledged(id);
+  } catch {
+    // The live loop retries without requiring the overlay to mount again.
+  }
+}
 
 /** A live stream, deliberately uncached. Restored snapshots invalidate in-flight responses. */
 export function startLiveEvents(
   client: Pick<PluginClientContext, "paseo" | "rpc">,
-  store: CelebrationStore,
+  store: CelebrationStore
 ) {
   let stopped = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -24,6 +39,7 @@ export function startLiveEvents(
   reset();
   async function poll() {
     if (stopped) return;
+    store.prune();
     if (observationFailed) {
       release();
       timer = setTimeout(connect, 1000);
@@ -37,7 +53,15 @@ export function startLiveEvents(
     }
     const expectedGeneration = generation;
     try {
-      const response = await client.rpc(pollCelebrations, { session, baseline });
+      // Retry confirmation after failures before asking for recoverable events.
+      for (const id of store.pendingAcknowledgements()) {
+        await client.rpc(reportCelebration, { id });
+        store.acknowledged(id);
+      }
+      const response = await client.rpc(pollCelebrations, {
+        session,
+        baseline,
+      });
       if (
         !stopped &&
         generation === expectedGeneration &&

@@ -1,16 +1,28 @@
 import { defineRpc } from "@getpaseo/plugin";
 import { z } from "zod";
+export const RETENTION_MS = 24 * 60 * 60 * 1000;
+export const MAX_PENDING = 100;
 export const celebrationSchema = z.object({
   id: z.string(),
   workspaceName: z.string(),
+  expiresAt: z.number().optional(),
   title: z.string(),
   url: z.string().url(),
-  issues: z.array(z.object({ number: z.number().int(), title: z.string(), summary: z.string() })),
+  issues: z.array(
+    z.object({
+      number: z.number().int(),
+      title: z.string(),
+      summary: z.string(),
+    })
+  ),
 });
 export type Celebration = z.infer<typeof celebrationSchema>;
 export const pollCelebrations = defineRpc({
   name: "celebrations.poll",
-  input: z.object({ session: z.string().min(1).max(100), baseline: z.boolean() }),
+  input: z.object({
+    session: z.string().min(1).max(100),
+    baseline: z.boolean(),
+  }),
   output: z.object({ events: z.array(celebrationSchema) }),
 });
 export const reportCelebration = defineRpc({
@@ -21,7 +33,10 @@ export const reportCelebration = defineRpc({
 export const diagnoseCelebration = defineRpc({
   name: "celebrations.diagnose",
   input: z.object({ preview: z.boolean() }),
-  output: z.object({ clients: z.number().int(), previewId: z.string().nullable() }),
+  output: z.object({
+    clients: z.number().int(),
+    previewId: z.string().nullable(),
+  }),
 });
 export const previewCelebration: Celebration = {
   id: "preview",

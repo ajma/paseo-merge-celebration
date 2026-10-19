@@ -22,7 +22,10 @@ export function contributeServer(server: PluginServerContext) {
     observation = (async () => {
       let cursor: string | undefined;
       do {
-        const result = await paseo.workspaces.list({ subscribe: {}, page: { limit: 200, cursor } });
+        const result = await paseo.workspaces.list({
+          subscribe: {},
+          page: { limit: 200, cursor },
+        });
         if (lifetime.signal.aborted) {
           result.subscription.release();
           return;
@@ -67,13 +70,14 @@ export function contributeServer(server: PluginServerContext) {
     return response;
   });
   server.handle(reportCelebration, ({ id }) => {
+    broker.presented(id);
     console.info("[merge-celebration] Rendered", id);
     return {};
   });
   server.handle(diagnoseCelebration, ({ preview }) => {
     const audience = broker.audience();
     const previewId = preview ? `diagnostic-preview-${Date.now()}` : null;
-    if (previewId) broker.publish({ ...previewCelebration, id: previewId }, audience);
+    if (previewId) broker.publish({ ...previewCelebration, id: previewId });
     return { clients: audience.size, previewId };
   });
   const removeCreated = server.on("workspace.created", ({ workspace }) => {
@@ -95,29 +99,32 @@ export function contributeServer(server: PluginServerContext) {
       "[merge-celebration] Archive observed",
       workspace.id,
       "live clients",
-      audience.size,
+      audience.size
     );
     const pending = identities.get(workspace.id);
     identities.delete(workspace.id);
-    if (audience.size === 0) return;
     try {
       const identity = await pending;
       if (!identity) {
         console.warn(
           "[merge-celebration] Skipping archive without observed GitHub branch identity",
-          workspace.id,
+          workspace.id
         );
         return;
       }
-      const event = await resolveCelebration({ workspace, identity, signal: lifetime.signal });
+      const event = await resolveCelebration({
+        workspace,
+        identity,
+        signal: lifetime.signal,
+      });
       console.info(
         "[merge-celebration] Merge decision",
         workspace.id,
         JSON.stringify(identity),
-        event ? "verified" : "not eligible",
+        event ? "verified" : "not eligible"
       );
       if (event && !lifetime.signal.aborted) {
-        broker.publish(event, audience);
+        broker.publish(event);
         console.info("[merge-celebration] Published", event.id);
       }
     } catch (error) {
@@ -125,7 +132,7 @@ export function contributeServer(server: PluginServerContext) {
         console.error(
           "[merge-celebration] Merge verification failed",
           workspace.id,
-          error instanceof Error ? error.message : String(error),
+          error instanceof Error ? error.message : String(error)
         );
     }
   });

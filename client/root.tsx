@@ -12,12 +12,13 @@ export interface OverlayRootProps {
 export function OverlayRoot({ store, presentation, onPresented }: OverlayRootProps) {
   const [visible, setVisible] = useState(AppState.currentState === "active");
   useEffect(() => {
-    const subscription = AppState.addEventListener("change", (state) =>
-      setVisible(state === "active"),
-    );
+    const subscription = AppState.addEventListener("change", (state) => {
+      store.prune();
+      setVisible(state === "active");
+    });
     setVisible(AppState.currentState === "active");
     return () => subscription.remove();
-  }, []);
+  }, [store]);
   const event = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   useEffect(() => {
     if (event && visible) onPresented?.(event.id);
@@ -25,12 +26,12 @@ export function OverlayRoot({ store, presentation, onPresented }: OverlayRootPro
   const theme = useSyncExternalStore(
     presentation.subscribe,
     presentation.getSnapshot,
-    presentation.getSnapshot,
+    presentation.getSnapshot
   );
   const settings = useSyncExternalStore(
     presentation.subscribe,
     presentation.getSettings,
-    presentation.getSettings,
+    presentation.getSettings
   );
   const { width } = useWindowDimensions();
   if (!visible) return null;

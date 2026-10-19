@@ -4,9 +4,9 @@ import type { PluginClientContext, PluginSidebarItemProps } from "@getpaseo/plug
 import { createCelebrationStore } from "./client/store";
 import { createPresentationStore, type PresentationStore } from "./client/presentation";
 import { mountBrowserOverlay } from "./client/web";
-import { startLiveEvents } from "./client/events";
+import { startLiveEvents, reportPresented } from "./client/events";
 import { SettingsScreen, useSettingsBridge } from "./client/settings";
-import { previewCelebration, reportCelebration } from "./shared/celebration";
+import { previewCelebration } from "./shared/celebration";
 
 function ThemeBridge({
   theme,
@@ -26,17 +26,27 @@ export default function contribute(client: PluginClientContext) {
     store,
     presentation,
     onPresented(id) {
-      void client.rpc(reportCelebration, { id }).catch(() => {});
+      void reportPresented(client, store, id);
     },
   });
-  const stopEvents = startLiveEvents(client, {
-    ...store,
-    show(event) {
-      if (presentation.getSettings().enabled) store.show(event);
-    },
+  let stopEvents = () => {};
+  let started = false;
+  const removeSettingsGate = presentation.subscribe(() => {
+    if (started || !presentation.settingsReady()) return;
+    started = true;
+    stopEvents = startLiveEvents(client, {
+      ...store,
+      show(event) {
+        if (presentation.getSettings().enabled) store.show(event);
+        else void reportPresented(client, store, event.id);
+      },
+    });
   });
   function preview() {
-    store.show({ ...previewCelebration, id: `preview-${Date.now()}-${Math.random()}` });
+    store.show({
+      ...previewCelebration,
+      id: `preview-${Date.now()}-${Math.random()}`,
+    });
   }
   function Bridge(props: PluginSidebarItemProps) {
     return <ThemeBridge {...props} presentation={presentation} />;
@@ -77,6 +87,7 @@ export default function contribute(client: PluginClientContext) {
     removePreview();
     removeSettings();
     removeTheme();
+    removeSettingsGate();
     stopEvents();
     unmount?.();
     store.clear();

@@ -57,7 +57,13 @@ test("celebrates an exact merged PR and includes a linked issue recap", async ()
     workspaceName: "Feature",
     title: "Fix it",
     url: merged.url,
-    issues: [{ number: 3, title: "Bug", summary: "Fix keyboard focus Keep the editor usable." }],
+    issues: [
+      {
+        number: 3,
+        title: "Bug",
+        summary: "Fix keyboard focus Keep the editor usable.",
+      },
+    ],
   });
 });
 test("manual archives of open, closed, mismatched or subsequently merged work stay silent", async () => {
@@ -66,23 +72,46 @@ test("manual archives of open, closed, mismatched or subsequently merged work st
   assert.equal(await resolve({ ...merged, mergedAt: "2026-10-15T12:00:01.000Z" }), null);
   assert.equal(await resolve({ ...merged, headRefOid: "b".repeat(40) }), null);
 });
-test("live mailboxes deliver once and discard offline, reconnect and restarted history", () => {
+test("an archive with no live clients is recovered after reconnect until presented", () => {
   let time = 0;
   const broker = createBroker(() => time);
-  assert.deepEqual(broker.poll({ session: "a", baseline: true }), { events: [] });
-  const audience = broker.audience();
-  broker.publish(previewCelebration, audience);
-  assert.deepEqual(broker.poll({ session: "a", baseline: false }).events, [previewCelebration]);
-  assert.deepEqual(broker.poll({ session: "a", baseline: false }).events, []);
-  broker.poll({ session: "a", baseline: true });
-  broker.publish(previewCelebration, audience);
-  assert.deepEqual(broker.poll({ session: "a", baseline: false }).events, []);
-  const beforeOffline = broker.audience();
-  time = 5000;
-  broker.publish(previewCelebration, beforeOffline);
-  assert.deepEqual(broker.poll({ session: "a", baseline: false }).events, []);
+  broker.poll({ session: "old", baseline: true });
+  time = 60_000;
+  assert.equal(broker.audience().size, 0);
+  broker.publish(previewCelebration);
+  assert.deepEqual(
+    broker.poll({ session: "new", baseline: true }).events.map((event) => event.id),
+    ["preview"]
+  );
+  assert.deepEqual(broker.poll({ session: "new", baseline: false }).events, []);
+  // Delivery alone is not confirmation that the overlay was visible.
+  assert.deepEqual(
+    broker.poll({ session: "restored", baseline: true }).events.map((event) => event.id),
+    ["preview"]
+  );
+  broker.presented("preview");
+  assert.deepEqual(broker.poll({ session: "again", baseline: true }).events, []);
+});
+test("pending celebrations expire after a day and reload clears volatile history", () => {
+  let time = 0;
+  const broker = createBroker(() => time);
+  broker.publish(previewCelebration);
+  time = 24 * 60 * 60 * 1000;
+  assert.deepEqual(broker.poll({ session: "late", baseline: true }).events, []);
+  broker.publish({ ...previewCelebration, id: "fresh" });
   broker.clear();
-  assert.deepEqual(broker.poll({ session: "a", baseline: false }).events, []);
+  assert.deepEqual(broker.poll({ session: "restart", baseline: true }).events, []);
+});
+test("multiple recovered celebrations appear in order and dismissed ones stay dismissed", () => {
+  const store = createCelebrationStore();
+  store.show(previewCelebration);
+  store.show({ ...previewCelebration, id: "second" });
+  assert.equal(store.getSnapshot()?.id, "preview");
+  store.dismiss();
+  assert.equal(store.getSnapshot()?.id, "second");
+  store.dismiss();
+  store.show(previewCelebration);
+  assert.equal(store.getSnapshot(), null);
 });
 test("dismissed events cannot replay, and preview can run again with a new ID", () => {
   const store = createCelebrationStore();
@@ -99,9 +128,9 @@ test("GitHub parsing and recaps do not render scripts, images or code", () => {
   assert.equal(
     summarize(
       "<!-- hidden --> # Fix [focus](https://example.com) ![image](url) ```secret```",
-      "Fallback",
+      "Fallback"
     ),
-    "Fix focus",
+    "Fix focus"
   );
 });
 test("merge lookup works after a real worktree is deleted and its branch survives", async () => {
@@ -131,7 +160,11 @@ test("merge lookup works after a real worktree is deleted and its branch survive
       run: async (file, args, signal) =>
         file === "git"
           ? command(file, args, signal)
-          : JSON.stringify({ ...merged, headRefOid: actualSha, closingIssuesReferences: [] }),
+          : JSON.stringify({
+              ...merged,
+              headRefOid: actualSha,
+              closingIssuesReferences: [],
+            }),
     });
     assert.equal(event?.title, "Fix it");
   } finally {
@@ -151,7 +184,7 @@ test("GitHub failures fail closed instead of producing a celebration", async () 
           throw new Error("GitHub unavailable");
         },
       }),
-    /GitHub unavailable/,
+    /GitHub unavailable/
   );
 });
 
@@ -159,7 +192,11 @@ test("a missing issue title in gh PR references does not block a merged celebrat
   const event = await resolve();
   assert.equal(event?.title, "Fix it");
   assert.deepEqual(event?.issues, [
-    { number: 3, title: "Bug", summary: "Fix keyboard focus Keep the editor usable." },
+    {
+      number: 3,
+      title: "Bug",
+      summary: "Fix keyboard focus Keep the editor usable.",
+    },
   ]);
 });
 test("an inaccessible linked issue cannot suppress a verified merge celebration", async () => {
@@ -175,7 +212,11 @@ test("an inaccessible linked issue cannot suppress a verified merge celebration"
   });
   assert.equal(event?.title, "Fix it");
   assert.deepEqual(event?.issues, [
-    { number: 3, title: "Issue #3", summary: "Issue details could not be loaded." },
+    {
+      number: 3,
+      title: "Issue #3",
+      summary: "Issue details could not be loaded.",
+    },
   ]);
 });
 test("settings default to the original celebration and build its headline", async () => {
@@ -184,4 +225,31 @@ test("settings default to the original celebration and build its headline", asyn
   assert.equal(headline({ verb: "landed", emoji: "none" }), "Work landed!");
   assert.deepEqual(settingsSchema.parse({}), defaultSettings);
   assert.equal(settingsSchema.safeParse({ verb: "yeeted" }).success, false);
+});
+
+test("a hidden client bounds and expires its undisplayed queue", () => {
+  let now = 0;
+  const store = createCelebrationStore(() => now);
+  for (let i = 0; i < 101; i++)
+    store.show({ ...previewCelebration, id: String(i), expiresAt: 1000 });
+  let count = 0;
+  while (store.getSnapshot()) {
+    count++;
+    store.dismiss();
+  }
+  assert.equal(count, 100);
+  store.show({ ...previewCelebration, id: "expire", expiresAt: 1000 });
+  now = 1000;
+  store.prune();
+  assert.equal(store.getSnapshot(), null);
+});
+
+test("dismissing an expired recap does not also dismiss the next recovered event", () => {
+  let now = 0;
+  const store = createCelebrationStore(() => now);
+  store.show({ ...previewCelebration, id: "old", expiresAt: 1000 });
+  store.show({ ...previewCelebration, id: "next", expiresAt: 2000 });
+  now = 1000;
+  store.dismiss();
+  assert.equal(store.getSnapshot()?.id, "next");
 });
