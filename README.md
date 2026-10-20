@@ -4,7 +4,7 @@
 
 A little celebration for a lot of hard work. When your pull request is merged, colorful confetti falls across Paseo, with a recap of what you just shipped.
 
-![Colorful confetti falling over a sample Paseo workspace, with a “Work shipped!” recap and Dismiss, Open workspace and Archive workspace buttons](docs/celebration-preview.png)
+![Colorful confetti falling over a sample Paseo workspace, with a “Work shipped!” recap and a close control, Open workspace and Archive workspace buttons](docs/celebration-preview.png)
 
 _Staged screenshot: the real celebration UI over a fictional workspace._
 
@@ -13,9 +13,11 @@ _Staged screenshot: the real celebration UI over a fictional workspace._
 - **Celebrate automatically.** Merge your PR and let the confetti fly.
 - **Remember the win.** See the PR title and a short recap of linked issues.
 - **Keep your flow.** Your current screen stays right where it is, ready to use.
-- **Enjoy it as long as you like.** Hit **Dismiss** to keep working, **Open workspace** to jump to the work you shipped, or **Archive workspace** to put it away. The last pieces drift offscreen.
+- **Enjoy it as long as you like.** Click **×** or press **Esc** to keep working, **Open workspace** to jump to the work you shipped, or **Archive workspace** to put it away. The last pieces drift offscreen.
 - **Keep it calm.** Reduced motion gives you the recap without the animation.
 - **Make it yours.** Pick the words, the emoji and the kind of confetti you like.
+
+**Keyboard shortcuts:** **Esc** closes the recap, **Option/Alt+O** opens its workspace, and **Option/Alt+A** archives it. Shortcuts pause while you edit text. Workspace actions are disabled in previews and while archival is pending.
 
 Unmerged work stays quiet. Existing merged PRs at plugin startup do not trigger celebrations. Merge detection follows Paseo’s GitHub status refreshes. Disable Paseo’s automatic workspace archival after merge if you want to choose when to archive from the celebration. Missed celebrations wait for your desktop or browser to reconnect, for up to 24 hours. Once a window shows one, it will not replay on reconnect. Pending events are held in memory and clear when the plugin or daemon restarts.
 

@@ -3,6 +3,9 @@ import { createRoot } from "react-dom/client";
 import { Pressable, Text, TextInput, View } from "react-native";
 import type { PluginClientContext, PluginHostProps, PluginScreenProps, PluginOpenScreenInput } from "@getpaseo/plugin/client";
 import contribute from "../../index.client";
+import { mountBrowserOverlay } from "../../client/web";
+import { createCelebrationStore } from "../../client/store";
+import { createPresentationStore } from "../../client/presentation";
 import { createBroker } from "../../server/broker";
 import { previewCelebration } from "../../shared/celebration";
 import { setTestSettings } from "./host";
@@ -74,6 +77,25 @@ const pluginContext = {
   },
 };
 Object.assign(window, {
+  showOtherHostCelebration(preview = false) {
+    const store = createCelebrationStore();
+    mountBrowserOverlay({
+      store,
+      presentation: createPresentationStore(),
+      async onArchive(workspaceId) {
+        document.body.setAttribute("data-other-archived-workspace", workspaceId);
+      },
+      onOpenWorkspace(workspaceId) {
+        document.body.setAttribute("data-other-opened-workspace", workspaceId);
+      },
+    });
+    store.show({
+      ...previewCelebration,
+      id: "other-host",
+      workspaceName: "Other host",
+      workspaceId: preview ? undefined : "other-workspace",
+    });
+  },
   setCelebrationSettings: setTestSettings,
   queueCelebration: (id = "recovered") => broker.publish({
     ...previewCelebration, id, workspaceId: "merged-workspace",

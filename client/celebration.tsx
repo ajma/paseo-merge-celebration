@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   AccessibilityInfo,
   Pressable,
@@ -11,6 +11,7 @@ import type { PluginHostProps } from "@getpaseo/plugin/client";
 import { confettiOptions, headline, type CelebrationSettings } from "../shared/settings";
 import type { CelebrationStore } from "./store";
 import { Confetti } from "./confetti.web";
+import type { CelebrationShortcuts } from "./shortcuts";
 function useReducedMotion() {
   const [reduced, setReduced] = useState(true);
   useEffect(() => {
@@ -35,11 +36,13 @@ export function CelebrationOverlay({
   settings,
   onArchive,
   onOpenWorkspace,
+  shortcuts,
 }: Pick<PluginHostProps, "theme" | "layout"> & {
   store: CelebrationStore;
   settings: CelebrationSettings;
   onArchive?: (workspaceId: string) => Promise<void>;
   onOpenWorkspace?: (workspaceId: string) => void;
+  shortcuts?: CelebrationShortcuts;
 }) {
   const event = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const motionGeneration = useSyncExternalStore(
@@ -50,6 +53,12 @@ export function CelebrationOverlay({
   const reduced = useReducedMotion();
   const { width, height } = useWindowDimensions();
   const options = useMemo(() => confettiOptions(settings), [settings]);
+  function isCurrent() {
+    return event !== null && store.getSnapshot()?.id === event.id;
+  }
+  function dismiss() {
+    if (isCurrent()) store.dismiss();
+  }
   return (
     <>
       {!reduced && settings.confetti && (
@@ -78,6 +87,7 @@ export function CelebrationOverlay({
             }}
           >
             <View
+              testID="celebration-card"
               pointerEvents="box-none"
               style={{
                 width: "100%",
@@ -91,6 +101,20 @@ export function CelebrationOverlay({
                 gap: layout.compact ? 8 : 10,
               }}
             >
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss celebration"
+                accessibilityHint="Keyboard shortcut: Escape"
+                aria-keyshortcuts="Escape"
+                onPress={dismiss}
+                style={{
+                  position: "absolute", top: 6, right: 6, width: 44, height: 44,
+                  alignItems: "center", justifyContent: "center", borderRadius: 8,
+                }}
+              >
+                <Text style={{ color: theme.colors.foregroundMuted, fontSize: 26, lineHeight: 28 }}>×</Text>
+                <Text style={{ color: theme.colors.foregroundMuted, fontSize: 10 }}>Esc</Text>
+              </Pressable>
               <View pointerEvents="none" style={{ gap: layout.compact ? 8 : 10 }}>
                 <Text
                   accessibilityRole="header"
@@ -99,6 +123,7 @@ export function CelebrationOverlay({
                     color: theme.colors.statusSuccess,
                     fontSize: layout.compact ? 22 : 25,
                     fontWeight: "700",
+                    paddingRight: 36,
                   }}
                 >
                   {headline(settings)}
@@ -136,9 +161,9 @@ export function CelebrationOverlay({
                 workspaceId={event.workspaceId}
                 onArchive={onArchive}
                 onOpenWorkspace={onOpenWorkspace}
-                onDismiss={() => {
-                  if (store.getSnapshot()?.id === event.id) store.dismiss();
-                }}
+                onDismiss={dismiss}
+                isCurrent={isCurrent}
+                shortcuts={shortcuts}
               />
             </View>
           </View>
@@ -154,19 +179,24 @@ function CelebrationActions({
   onArchive,
   onOpenWorkspace,
   onDismiss,
+  isCurrent,
+  shortcuts,
 }: {
   theme: PluginHostProps["theme"];
   workspaceId?: string;
   onArchive?: (workspaceId: string) => Promise<void>;
   onOpenWorkspace?: (workspaceId: string) => void;
   onDismiss: () => void;
+  isCurrent: () => boolean;
+  shortcuts?: CelebrationShortcuts;
 }) {
   const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const archivingRef = useRef(false);
   const archiveDisabled = !workspaceId || !onArchive || archiving;
   const openDisabled = !workspaceId || !onOpenWorkspace || archiving;
   function openWorkspace() {
-    if (!workspaceId || !onOpenWorkspace || archiving) return;
+    if (!isCurrent() || !workspaceId || !onOpenWorkspace || archivingRef.current) return;
     setError(null);
     try {
       onOpenWorkspace(workspaceId);
@@ -176,7 +206,8 @@ function CelebrationActions({
     }
   }
   async function archive() {
-    if (!workspaceId || !onArchive || archiving) return;
+    if (!isCurrent() || !workspaceId || !onArchive || archivingRef.current) return;
+    archivingRef.current = true;
     setArchiving(true);
     setError(null);
     try {
@@ -185,9 +216,15 @@ function CelebrationActions({
     } catch (error) {
       setError(error instanceof Error ? error.message : "Could not archive workspace. Try again.");
     } finally {
+      archivingRef.current = false;
       setArchiving(false);
     }
   }
+  useEffect(() => shortcuts?.subscribe({
+    dismiss: onDismiss,
+    openWorkspace: openDisabled ? undefined : openWorkspace,
+    archiveWorkspace: archiveDisabled ? undefined : () => void archive(),
+  }), [shortcuts, onDismiss, openDisabled, archiveDisabled, openWorkspace, archive]);
   const button = {
     minHeight: 44,
     justifyContent: "center" as const,
@@ -205,32 +242,32 @@ function CelebrationActions({
       <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end", gap: 8 }}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Dismiss celebration"
-          onPress={onDismiss}
-          style={{ ...button, backgroundColor: theme.colors.surface2 }}
-        >
-          <Text style={{ color: theme.colors.foreground, fontWeight: "600" }}>Dismiss</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
           accessibilityLabel="Open workspace"
+          aria-keyshortcuts="Alt+O"
           accessibilityState={{ disabled: openDisabled }}
           disabled={openDisabled}
           onPress={openWorkspace}
-          style={{ ...button, backgroundColor: theme.colors.surface2, opacity: openDisabled ? 0.6 : 1 }}
+          style={{ ...button, flexDirection: "row", gap: 10, backgroundColor: theme.colors.surface2, opacity: openDisabled ? 0.6 : 1 }}
         >
           <Text style={{ color: theme.colors.foreground, fontWeight: "600" }}>Open workspace</Text>
+          <Text style={{ color: theme.colors.foregroundMuted, fontSize: 12 }}>
+            {shortcuts?.labels.openWorkspace ?? "Alt+O"}
+          </Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Archive workspace"
+          aria-keyshortcuts="Alt+A"
           accessibilityState={{ disabled: archiveDisabled, busy: archiving }}
           disabled={archiveDisabled}
           onPress={() => void archive()}
-          style={{ ...button, backgroundColor: theme.colors.accent, opacity: archiveDisabled ? 0.6 : 1 }}
+          style={{ ...button, flexDirection: "row", gap: 10, backgroundColor: theme.colors.accent, opacity: archiveDisabled ? 0.6 : 1 }}
         >
           <Text style={{ color: theme.colors.accentForeground, fontWeight: "600" }}>
             {archiving ? "Archiving…" : "Archive workspace"}
+          </Text>
+          <Text style={{ color: theme.colors.accentForeground, fontSize: 12 }}>
+            {shortcuts?.labels.archiveWorkspace ?? "Alt+A"}
           </Text>
         </Pressable>
       </View>

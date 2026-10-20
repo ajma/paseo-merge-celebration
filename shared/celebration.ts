@@ -49,7 +49,7 @@ export const previewCelebration: Celebration = {
       number: 42,
       title: "Celebrate shipped work",
       summary:
-        "Added a fullscreen celebration when a pull request merges, with dismiss, open workspace and archive buttons and support for reduced motion.",
+        "Added a fullscreen celebration when a pull request merges, with a close control and shortcuts for workspace actions and support for reduced motion.",
     },
   ],
 };

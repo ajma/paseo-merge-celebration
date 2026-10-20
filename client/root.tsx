@@ -3,10 +3,12 @@ import { AppState, useWindowDimensions } from "react-native";
 import { CelebrationOverlay } from "./celebration";
 import type { CelebrationStore } from "./store";
 import type { PresentationStore } from "./presentation";
+import type { CelebrationShortcuts } from "./shortcuts";
 
 export interface OverlayRootProps {
   store: CelebrationStore;
   presentation: PresentationStore;
+  shortcuts?: CelebrationShortcuts;
   onOpenWorkspace?: (workspaceId: string) => void;
   onArchive?: (workspaceId: string) => Promise<void>;
   onPresented?: (id: string) => void;
@@ -17,6 +19,7 @@ export function OverlayRoot({
   onPresented,
   onArchive,
   onOpenWorkspace,
+  shortcuts,
 }: OverlayRootProps) {
   const [visible, setVisible] = useState(AppState.currentState === "active");
   useEffect(() => {
@@ -51,6 +54,7 @@ export function OverlayRoot({
       settings={settings}
       onArchive={onArchive}
       onOpenWorkspace={onOpenWorkspace}
+      shortcuts={shortcuts}
     />
   );
 }

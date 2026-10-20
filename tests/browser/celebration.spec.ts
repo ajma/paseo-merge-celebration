@@ -380,3 +380,174 @@ test("clients without workspace navigation show a useful fallback", async ({ pag
   await expect(page.getByRole("alert")).toHaveText("Open this workspace from the sidebar.");
   await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
 });
+
+
+for (const compact of [false, true]) {
+  test(`recap close control is an X in the top-right corner; compact=${compact}`, async ({ page }) => {
+    await page.setViewportSize(compact ? { width: 390, height: 844 } : { width: 1280, height: 800 });
+    await page.goto("/");
+    await page.getByRole("button", { name: "Preview merge celebration" }).click();
+    const close = page.getByRole("button", { name: "Dismiss celebration" });
+    await expect(close).toContainText("×");
+    await expect(close).not.toContainText("Dismiss");
+    await expect(close).toHaveAttribute("aria-keyshortcuts", "Escape");
+    const card = (await page.getByTestId("celebration-card").boundingBox())!;
+    const button = (await close.boundingBox())!;
+    expect(button.width).toBeGreaterThanOrEqual(44);
+    expect(button.height).toBeGreaterThanOrEqual(44);
+    expect(button.x + button.width).toBeGreaterThan(card.x + card.width - 20);
+    expect(button.y).toBeLessThan(card.y + 20);
+    await close.click();
+    await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+  });
+}
+
+test("Escape dismisses the celebration without workspace actions", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Preview merge celebration" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+  await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+  await expect(page.getByText(/Opened workspace:/)).toHaveCount(0);
+});
+
+for (const action of ["open", "archive"]) {
+  test(`keyboard shortcut can ${action} the celebration workspace`, async ({ page }) => {
+    await page.goto("/");
+    await page.evaluate(() => (window as unknown as { queueCelebration(): void }).queueCelebration());
+    const button = page.getByRole("button", { name: action === "open" ? "Open workspace" : "Archive workspace", exact: true });
+    await expect(button).toBeEnabled();
+    await expect(button).toHaveAttribute("aria-keyshortcuts", action === "open" ? "Alt+O" : "Alt+A");
+    await page.keyboard.press(action === "open" ? "Alt+KeyO" : "Alt+KeyA");
+    await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+    if (action === "open") {
+      await expect(page.getByText("Opened workspace: merged-workspace on test")).toBeVisible();
+      await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+    } else await expect(page.locator("body")).toHaveAttribute("data-archived-workspace", "merged-workspace");
+  });
+}
+
+test("workspace keyboard shortcuts stay inert in previews", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Preview merge celebration" }).click();
+  await page.keyboard.press("Alt+KeyO");
+  await page.keyboard.press("Alt+KeyA");
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+  await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+  await expect(page.getByText(/Opened workspace:/)).toHaveCount(0);
+});
+
+test("celebration shortcuts preserve editing and ignore composition or extra modifiers", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => (window as unknown as { queueCelebration(): void }).queueCelebration());
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+  await page.getByRole("textbox", { name: "Editor" }).fill("Keep editing");
+  for (const key of ["Escape", "Alt+KeyO", "Alt+KeyA"]) await page.keyboard.press(key);
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+  await page.getByRole("button", { name: "Underlying action" }).click();
+  for (const key of ["Alt+Shift+KeyA", "Control+Alt+KeyO"]) await page.keyboard.press(key);
+  await page.evaluate(() => document.dispatchEvent(new KeyboardEvent("keydown", {
+    key: "Escape", code: "Escape", isComposing: true, bubbles: true,
+  })));
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+  await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+  await expect(page.getByText(/Opened workspace:/)).toHaveCount(0);
+});
+
+test("held Escape cannot dismiss the next queued celebration", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    const queue = (window as unknown as { queueCelebration(id: string): void }).queueCelebration;
+    queue("first"); queue("second");
+  });
+  await expect(page.locator("body")).toHaveAttribute("data-presented-celebration", "first");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("body")).toHaveAttribute("data-presented-celebration", "second");
+  await page.evaluate(() => document.dispatchEvent(new KeyboardEvent("keydown", {
+    key: "Escape", code: "Escape", repeat: true, bubbles: true,
+  })));
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+});
+
+test("keyboard listeners release after dismissal and plugin unload", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Preview merge celebration" }).click();
+  await page.getByRole("button", { name: "Dismiss celebration" }).click();
+  await page.evaluate(() => document.addEventListener("keydown", event => {
+    document.body.setAttribute("data-key-default-prevented", String(event.defaultPrevented));
+  }));
+  await page.keyboard.press("Alt+KeyA");
+  await expect(page.locator("body")).toHaveAttribute("data-key-default-prevented", "false");
+  await page.getByRole("button", { name: "Preview merge celebration" }).click();
+  await page.getByRole("button", { name: "Unload plugin" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("body")).toHaveAttribute("data-key-default-prevented", "false");
+  await expect(page.locator("[data-merge-celebration-root]")).toHaveCount(0);
+});
+
+
+test("repeated archive shortcuts cannot submit concurrent requests", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    document.body.setAttribute("data-delay-archive", "");
+    (window as unknown as { queueCelebration(): void }).queueCelebration();
+  });
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+  await page.evaluate(() => {
+    for (let i = 0; i < 2; i++) document.dispatchEvent(new KeyboardEvent("keydown", {
+      key: "å", code: "KeyA", altKey: true, bubbles: true,
+    }));
+  });
+  await expect(page.locator("body")).toHaveAttribute("data-archive-count", "1");
+  await expect(page.getByRole("button", { name: "Open workspace", exact: true })).toBeDisabled();
+  await page.keyboard.press("Alt+KeyO");
+  await expect(page.getByText(/Opened workspace:/)).toHaveCount(0);
+  await page.evaluate(() => (window as unknown as { finishArchive(): void }).finishArchive());
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+});
+
+
+test("keyboard shortcuts target the topmost host's recap", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => (window as unknown as { queueCelebration(): void }).queueCelebration());
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(1);
+  await page.evaluate(() => (window as unknown as { showOtherHostCelebration(): void }).showOtherHostCelebration());
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(2);
+  await page.keyboard.press("Alt+KeyA");
+  await expect(page.locator("body")).toHaveAttribute("data-other-archived-workspace", "other-workspace");
+  await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(1);
+  await page.keyboard.press("Alt+KeyA");
+  await expect(page.locator("body")).toHaveAttribute("data-archived-workspace", "merged-workspace");
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+});
+
+test("disabled shortcuts in the topmost preview cannot reach an obscured host", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => (window as unknown as { queueCelebration(): void }).queueCelebration());
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(1);
+  await page.evaluate(() => (window as unknown as { showOtherHostCelebration(preview: boolean): void }).showOtherHostCelebration(true));
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(2);
+  await page.keyboard.press("Alt+KeyA");
+  await page.keyboard.press("Alt+KeyO");
+  await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+  await expect(page.getByText(/Opened workspace:/)).toHaveCount(0);
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(2);
+  await page.keyboard.press("Escape");
+  await expect(page.getByText("Other host", { exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(1);
+});
+
+test("shortcuts cannot act on a celebration dismissed before React updates", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => (window as unknown as { queueCelebration(): void }).queueCelebration());
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+  await page.evaluate(() => {
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "a", code: "KeyA", altKey: true, bubbles: true }));
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "o", code: "KeyO", altKey: true, bubbles: true }));
+  });
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+  await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+  await expect(page.getByText(/Opened workspace:/)).toHaveCount(0);
+});
