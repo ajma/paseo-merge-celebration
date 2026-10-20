@@ -323,10 +323,60 @@ test("a pending archive cannot repeat or dismiss the next celebration", async ({
   await page.getByRole("button", { name: "Archive workspace" }).click();
   await expect(page.getByRole("button", { name: "Archive workspace" })).toBeDisabled();
   await expect(page.locator("body")).toHaveAttribute("data-archive-count", "1");
+  await expect(page.getByRole("button", { name: "Open workspace", exact: true })).toBeDisabled();
   await page.evaluate(() => (window as unknown as { queueCelebration(id: string): void }).queueCelebration("next"));
   await page.getByRole("button", { name: "Dismiss celebration" }).click();
   await expect(page.locator("body")).toHaveAttribute("data-presented-celebration", "next");
   await page.evaluate(() => (window as unknown as { finishArchive(): void }).finishArchive());
   await expect(page.locator("body")).toHaveAttribute("data-archived-workspace", "merged-workspace");
   await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+});
+
+
+for (const compact of [false, true]) {
+  test(`Open workspace navigates to the celebration workspace without archiving; compact=${compact}`, async ({ page }) => {
+    await page.setViewportSize(compact ? { width: 390, height: 844 } : { width: 1280, height: 800 });
+    await page.goto("/");
+    await page.evaluate(() => (window as unknown as { queueCelebration(): void }).queueCelebration());
+    await page.getByRole("button", { name: "Open workspace", exact: true }).click();
+    await expect(page.getByText("Opened workspace: merged-workspace on test")).toBeVisible();
+    await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+    await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+  });
+}
+
+test("preview Open workspace button cannot navigate or archive", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Preview merge celebration" }).click();
+  const open = page.getByRole("button", { name: "Open workspace", exact: true });
+  await expect(open).toBeVisible();
+  await expect(open).toBeDisabled();
+  await open.dispatchEvent("click");
+  await expect(page.getByText(/Opened workspace:/)).toHaveCount(0);
+  await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+});
+
+
+test("a failed workspace open keeps the celebration available for retry", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    document.body.setAttribute("data-fail-open-screen", "");
+    (window as unknown as { queueCelebration(): void }).queueCelebration();
+  });
+  await page.getByRole("button", { name: "Open workspace", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveText("Could not open workspace.");
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+  await page.evaluate(() => document.body.removeAttribute("data-fail-open-screen"));
+  await page.getByRole("button", { name: "Open workspace", exact: true }).click();
+  await expect(page.getByText("Opened workspace: merged-workspace on test")).toBeVisible();
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+});
+
+test("clients without workspace navigation show a useful fallback", async ({ page }) => {
+  await page.goto("/?no-navigation");
+  await page.evaluate(() => (window as unknown as { queueCelebration(): void }).queueCelebration());
+  await page.getByRole("button", { name: "Open workspace", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveText("Open this workspace from the sidebar.");
+  await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
 });

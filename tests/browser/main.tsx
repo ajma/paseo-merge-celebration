@@ -1,7 +1,7 @@
-import React, { useState, type ComponentType } from "react";
+import React, { useState, useMemo, type ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import { Pressable, Text, TextInput, View } from "react-native";
-import type { PluginClientContext, PluginHostProps } from "@getpaseo/plugin/client";
+import type { PluginClientContext, PluginHostProps, PluginScreenProps, PluginOpenScreenInput } from "@getpaseo/plugin/client";
 import contribute from "../../index.client";
 import { createBroker } from "../../server/broker";
 import { previewCelebration } from "../../shared/celebration";
@@ -9,9 +9,20 @@ import { setTestSettings } from "./host";
 let Bridge: ComponentType<PluginHostProps>;
 let preview: () => void;
 let restoreSnapshot = () => {};
+const screens = new Map<string, ComponentType<PluginScreenProps>>();
+let showScreen = (_screen: PluginOpenScreenInput) => {};
 const broker = createBroker();
 const host = { id: "test", label: "Test host" };
 const pluginContext = {
+  addScreen({ id, Component }: { id: string; Component: ComponentType<PluginScreenProps> }) {
+    screens.set(id, Component);
+    return () => screens.delete(id);
+  },
+  openScreen(screen: PluginOpenScreenInput) {
+    if (document.body.hasAttribute("data-fail-open-screen")) throw new Error("Could not open workspace.");
+    if (!screens.has(screen.screenId)) throw new Error("Unknown screen");
+    showScreen(screen);
+  },
   addSidebarFooterItem({ Component }: { Component: ComponentType<PluginHostProps> }) {
     Bridge = Component;
     return () => {};
@@ -71,6 +82,17 @@ Object.assign(window, {
 const cleanup = contribute(pluginContext as unknown as PluginClientContext);
 function App() {
   const [count, setCount] = useState(0);
+  const [screen, setScreen] = useState<PluginOpenScreenInput | null>(null);
+  const [openedWorkspace, setOpenedWorkspace] = useState("");
+  showScreen = setScreen;
+  const Screen = screen ? screens.get(screen.screenId) : undefined;
+  const navigation = useMemo(() => ({
+    openWorkspace({ workspaceId, serverId }: { workspaceId: string; serverId?: string }) {
+      setOpenedWorkspace(`${workspaceId} on ${serverId}`);
+      setScreen(null);
+    },
+    openAgent() {},
+  }), []);
   const [dark, setDark] = useState(true);
   const compact = new URLSearchParams(location.search).has("compact");
   const theme = {
@@ -143,6 +165,14 @@ function App() {
           <Text style={{ color: theme.colors.foreground }}>Reconnect host</Text>
         </Pressable>
       </View>
+      {openedWorkspace && <Text>Opened workspace: {openedWorkspace}</Text>}
+      {Screen && screen && (
+        <Screen
+          host={host} theme={theme} layout={{ compact, platform: "web" }}
+          params={screen.params ?? {}}
+          navigation={new URLSearchParams(location.search).has("no-navigation") ? undefined : navigation}
+        />
+      )}
       <Bridge host={host} layout={{ compact, platform: "web" }} theme={theme} />
     </View>
   );

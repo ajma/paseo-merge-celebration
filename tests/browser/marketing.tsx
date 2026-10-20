@@ -20,7 +20,12 @@ presentation.update({
     statusDanger: "#e06c75",
   },
 });
-mountBrowserOverlay({ store, presentation, onArchive: async () => { store.dismiss(); } });
+mountBrowserOverlay({
+  store,
+  presentation,
+  onOpenWorkspace: () => { store.dismiss(); },
+  onArchive: async () => { store.dismiss(); },
+});
 store.show({
   id: "marketing-preview",
   workspaceName: "Keyboard shortcuts",
