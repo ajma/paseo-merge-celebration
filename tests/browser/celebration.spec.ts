@@ -269,3 +269,64 @@ test("a hidden recovered celebration survives reconnect and appears once visible
   await page.waitForTimeout(1200);
   await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
 });
+
+for (const compact of [false, true]) {
+  test(`merged celebration offers dismissal or workspace archival; compact=${compact}`, async ({ page }) => {
+    await page.setViewportSize(compact ? { width: 390, height: 844 } : { width: 1280, height: 800 });
+    await page.goto("/");
+    await page.evaluate(() => (window as unknown as { queueCelebration(): void }).queueCelebration());
+    await expect(page.getByRole("button", { name: "Archive workspace" })).toBeVisible();
+    await page.getByRole("button", { name: "Dismiss celebration" }).click();
+    await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+    await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+    await page.reload();
+    await page.evaluate(() => (window as unknown as { queueCelebration(): void }).queueCelebration());
+    await page.getByRole("button", { name: "Archive workspace" }).click();
+    await expect(page.locator("body")).toHaveAttribute("data-archived-workspace", "merged-workspace");
+    await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+  });
+}
+
+test("archive failures keep the celebration open for retry", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    document.body.setAttribute("data-fail-archive", "");
+    (window as unknown as { queueCelebration(): void }).queueCelebration();
+  });
+  await page.getByRole("button", { name: "Archive workspace" }).click();
+  await expect(page.getByRole("alert")).toHaveText("Workspace is busy. Try again.");
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+  await page.evaluate(() => document.body.removeAttribute("data-fail-archive"));
+  await page.getByRole("button", { name: "Archive workspace" }).click();
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+});
+
+test("preview archive button is disabled and cannot archive a workspace", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Preview merge celebration" }).click();
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+  const archive = page.getByRole("button", { name: "Archive workspace" });
+  await expect(archive).toBeVisible();
+  await expect(archive).toBeDisabled();
+  await archive.dispatchEvent("click");
+  await expect(page.locator("body")).not.toHaveAttribute("data-archive-request");
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+});
+
+
+test("a pending archive cannot repeat or dismiss the next celebration", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    document.body.setAttribute("data-delay-archive", "");
+    (window as unknown as { queueCelebration(): void }).queueCelebration();
+  });
+  await page.getByRole("button", { name: "Archive workspace" }).click();
+  await expect(page.getByRole("button", { name: "Archive workspace" })).toBeDisabled();
+  await expect(page.locator("body")).toHaveAttribute("data-archive-count", "1");
+  await page.evaluate(() => (window as unknown as { queueCelebration(id: string): void }).queueCelebration("next"));
+  await page.getByRole("button", { name: "Dismiss celebration" }).click();
+  await expect(page.locator("body")).toHaveAttribute("data-presented-celebration", "next");
+  await page.evaluate(() => (window as unknown as { finishArchive(): void }).finishArchive());
+  await expect(page.locator("body")).toHaveAttribute("data-archived-workspace", "merged-workspace");
+  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+});

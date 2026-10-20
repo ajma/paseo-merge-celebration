@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { z } from "zod";
-import type { PluginHookContext, PluginHookWorkspace } from "@getpaseo/plugin/server";
+import type { PluginHookContext } from "@getpaseo/plugin/server";
 import type { Celebration } from "../shared/celebration";
 const execute = promisify(execFile);
 export async function command(file: string, args: string[], signal?: AbortSignal) {
@@ -26,14 +26,15 @@ export function githubRepository(remote: string): string | null {
     );
   return match ? match[1] : null;
 }
-type Workspace = Awaited<
+export type Workspace = Awaited<
   ReturnType<PluginHookContext["paseo"]["workspaces"]["list"]>
 >["entries"][number];
 export function identify(workspace: Workspace): Identity | null {
   if (workspace.forge && workspace.forge !== "github") return null;
   const checkout = workspace.project?.checkout;
   const branch =
-    workspace.gitRuntime?.currentBranch ?? (checkout?.isGit ? checkout.currentBranch : null);
+    workspace.gitRuntime?.currentBranch ?? workspace.githubRuntime?.pullRequest?.headRefName ??
+    (checkout?.isGit ? checkout.currentBranch : null);
   const remote = workspace.gitRuntime?.remoteUrl ?? (checkout?.isGit ? checkout.remoteUrl : null);
   const pr = workspace.githubRuntime?.pullRequest;
   const repository = pr
@@ -91,14 +92,13 @@ export function summarize(body: string | null, title: string): string {
   return text.length > 300 ? `${text.slice(0, 297).trimEnd()}…` : text;
 }
 export async function resolveCelebration(input: {
-  workspace: PluginHookWorkspace;
+  workspace: Pick<Workspace, "id" | "name"> & { archivingAt?: string | null };
   identity: Identity;
   signal: AbortSignal;
   run?: typeof command;
 }): Promise<Celebration | null> {
   const { workspace, identity, signal, run = command } = input;
-  if (!workspace.archivedAt) return null;
-  // Worktree removal leaves refs/heads intact. Never run gh in the archived cwd.
+  // Read from the main repository in case automatic archival removes the worktree.
   const sha = await run(
     "git",
     ["-C", identity.root, "rev-parse", "--verify", `refs/heads/${identity.branch}^{commit}`],
@@ -133,11 +133,7 @@ export async function resolveCelebration(input: {
         ),
       ),
     );
-    const mergedBeforeArchive =
-      pr.state === "MERGED" &&
-      pr.mergedAt !== null &&
-      Date.parse(pr.mergedAt) <= Date.parse(workspace.archivedAt);
-    if (!mergedBeforeArchive || pr.headRefOid !== sha) continue;
+    if (pr.state !== "MERGED" || !pr.mergedAt || pr.headRefOid !== sha) continue;
     const issues: Celebration["issues"] = [];
     for (const reference of pr.closingIssuesReferences.slice(0, 3)) {
       const repo = githubRepository(reference.url.replace(/\/issues\/\d+\/?$/, ""));
@@ -162,7 +158,8 @@ export async function resolveCelebration(input: {
       }
     }
     return {
-      id: `${workspace.id}:${workspace.archivedAt}`,
+      id: `${workspace.id}:${pr.url}`,
+      workspaceId: workspace.archivingAt ? undefined : workspace.id,
       workspaceName: workspace.name ?? identity.branch,
       title: pr.title,
       url: pr.url,

@@ -15,7 +15,7 @@ const workspace = {
   projectId: "p",
   cwd: "/deleted/worktree",
   name: "Feature",
-  archivedAt: "2026-10-15T12:00:00.000Z",
+  archivedAt: null,
 };
 const identity = {
   root: "/surviving/repo",
@@ -53,7 +53,8 @@ function resolve(pr: Omit<typeof merged, "mergedAt"> & { mergedAt: string | null
 }
 test("celebrates an exact merged PR and includes a linked issue recap", async () => {
   assert.deepEqual(await resolve(), {
-    id: `w:${workspace.archivedAt}`,
+    id: `w:${merged.url}`,
+    workspaceId: "w",
     workspaceName: "Feature",
     title: "Fix it",
     url: merged.url,
@@ -66,13 +67,12 @@ test("celebrates an exact merged PR and includes a linked issue recap", async ()
     ],
   });
 });
-test("manual archives of open, closed, mismatched or subsequently merged work stay silent", async () => {
+test("open, closed and mismatched PRs stay silent", async () => {
   assert.equal(await resolve({ ...merged, state: "OPEN", mergedAt: null }), null);
   assert.equal(await resolve({ ...merged, state: "CLOSED" }), null);
-  assert.equal(await resolve({ ...merged, mergedAt: "2026-10-15T12:00:01.000Z" }), null);
   assert.equal(await resolve({ ...merged, headRefOid: "b".repeat(40) }), null);
 });
-test("an archive with no live clients is recovered after reconnect until presented", () => {
+test("a merge with no live clients is recovered after reconnect until presented", () => {
   let time = 0;
   const broker = createBroker(() => time);
   broker.poll({ session: "old", baseline: true });

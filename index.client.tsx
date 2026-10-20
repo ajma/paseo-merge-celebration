@@ -25,6 +25,10 @@ export default function contribute(client: PluginClientContext) {
   const unmount = mountBrowserOverlay({
     store,
     presentation,
+    async onArchive(workspaceId) {
+      const result = await client.paseo.workspaces.archive(workspaceId);
+      if (result.error) throw new Error(result.error);
+    },
     onPresented(id) {
       void reportPresented(client, store, id);
     },

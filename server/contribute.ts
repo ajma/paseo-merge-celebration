@@ -7,16 +7,64 @@ import {
 } from "../shared/celebration";
 import { celebrationSettings } from "../shared/settings";
 import { createBroker } from "./broker";
-import { captureDirectory, identify, resolveCelebration, type Identity } from "./github";
+import {
+  captureDirectory,
+  identify,
+  resolveCelebration,
+  type Identity,
+  type Workspace,
+} from "./github";
+
 export function contributeServer(server: PluginServerContext) {
   server.registerSettings(celebrationSettings);
   const lifetime = new AbortController();
-  const startedAt = Date.now();
   const broker = createBroker();
-  const identities = new Map<string, Promise<Identity | null>>();
+  const identities = new Map<string, Identity>();
   const handled = new Set<string>();
+  const checking = new Set<string>();
   const releases: (() => void)[] = [];
   let observation: Promise<void> | null = null;
+  let initialized = false;
+
+  function remember(workspace: Workspace, baseline = false) {
+    const identity = identify(workspace);
+    if (identity) identities.set(workspace.id, identity);
+    const pr = workspace.githubRuntime?.pullRequest;
+    if (!pr?.isMerged || (workspace.forge && workspace.forge !== "github")) return;
+    const key = `${workspace.id}:${pr.url}`;
+    // Existing merged PRs are history, rather than new merges to celebrate on reload.
+    if (baseline) handled.add(key);
+    if (handled.has(key) || checking.has(key) || lifetime.signal.aborted) return;
+    checking.add(key);
+    void (async () => {
+      const identity = identities.get(workspace.id) ??
+        await captureDirectory(
+          workspace.workspaceDirectory ?? workspace.project?.checkout.cwd ?? workspace.projectRootPath,
+          lifetime.signal,
+        );
+      if (!identity) return;
+      const event = await resolveCelebration({
+        workspace,
+        identity,
+        signal: lifetime.signal,
+      });
+      if (event && event.url === pr.url && !lifetime.signal.aborted) {
+        handled.add(key);
+        broker.publish(event);
+        console.info("[merge-celebration] Published", event.id);
+      }
+    })()
+      .catch((error) => {
+        if (!lifetime.signal.aborted)
+          console.error(
+            "[merge-celebration] Merge verification failed",
+            workspace.id,
+            error instanceof Error ? error.message : String(error),
+          );
+      })
+      .finally(() => checking.delete(key));
+  }
+
   function observe(paseo: PluginHookContext["paseo"]) {
     if (observation) return observation;
     observation = (async () => {
@@ -30,33 +78,27 @@ export function contributeServer(server: PluginServerContext) {
           result.subscription.release();
           return;
         }
-        function remember(workspace: (typeof result.entries)[number]) {
-          const identity = identify(workspace);
-          const directory =
-            workspace.workspaceDirectory ??
-            workspace.project?.checkout.cwd ??
-            workspace.projectRootPath;
-          const pending = identity
-            ? Promise.resolve(identity)
-            : captureDirectory(directory, lifetime.signal);
-          identities.set(workspace.id, pending);
-          return pending;
-        }
-        // Establish identity before allowing this client to join the live audience.
-        for (const workspace of result.entries) await remember(workspace);
+        for (const workspace of result.entries) remember(workspace, !initialized);
         result.subscription.subscribe({
           snapshot: ({ entries }) => {
-            for (const workspace of entries) void remember(workspace);
+            for (const workspace of entries) remember(workspace);
           },
           update: (message) => {
             if (message.type === "workspace_update" && message.payload.kind === "upsert")
-              void remember(message.payload.workspace);
+              remember(message.payload.workspace);
+          },
+          error: () => {
+            // The next client poll reopens a terminally failed observation.
+            for (const release of releases.splice(0)) release();
+            observation = null;
           },
         });
         releases.push(() => result.subscription.release());
         cursor = result.pageInfo.nextCursor ?? undefined;
       } while (cursor);
+      initialized = true;
     })().catch((error) => {
+      for (const release of releases.splice(0)) release();
       observation = null;
       throw error;
     });
@@ -65,9 +107,7 @@ export function contributeServer(server: PluginServerContext) {
   server.handle(pollCelebrations, async (input, { paseo }) => {
     await observe(paseo);
     if (input.baseline) console.info("[merge-celebration] Desktop/browser client ready");
-    const response = broker.poll(input);
-    for (const event of response.events) console.info("[merge-celebration] Delivered", event.id);
-    return response;
+    return broker.poll(input);
   });
   server.handle(reportCelebration, ({ id }) => {
     broker.presented(id);
@@ -80,68 +120,11 @@ export function contributeServer(server: PluginServerContext) {
     if (previewId) broker.publish({ ...previewCelebration, id: previewId });
     return { clients: audience.size, previewId };
   });
-  const removeCreated = server.on("workspace.created", ({ workspace }) => {
-    const pending = captureDirectory(workspace.cwd, lifetime.signal);
-    identities.set(workspace.id, pending);
-    void pending.catch(() => {});
-  });
-  const removeArchive = server.on("workspace.archived", async ({ workspace }, { signal }) => {
-    if (
-      lifetime.signal.aborted ||
-      !workspace.archivedAt ||
-      Date.parse(workspace.archivedAt) < startedAt ||
-      handled.has(workspace.id)
-    )
-      return;
-    handled.add(workspace.id);
-    const audience = broker.audience();
-    console.info(
-      "[merge-celebration] Archive observed",
-      workspace.id,
-      "live clients",
-      audience.size
-    );
-    const pending = identities.get(workspace.id);
-    identities.delete(workspace.id);
-    try {
-      const identity = await pending;
-      if (!identity) {
-        console.warn(
-          "[merge-celebration] Skipping archive without observed GitHub branch identity",
-          workspace.id
-        );
-        return;
-      }
-      const event = await resolveCelebration({
-        workspace,
-        identity,
-        signal: lifetime.signal,
-      });
-      console.info(
-        "[merge-celebration] Merge decision",
-        workspace.id,
-        JSON.stringify(identity),
-        event ? "verified" : "not eligible"
-      );
-      if (event && !lifetime.signal.aborted) {
-        broker.publish(event);
-        console.info("[merge-celebration] Published", event.id);
-      }
-    } catch (error) {
-      if (!signal.aborted && !lifetime.signal.aborted)
-        console.error(
-          "[merge-celebration] Merge verification failed",
-          workspace.id,
-          error instanceof Error ? error.message : String(error)
-        );
-    }
-  });
   return () => {
     lifetime.abort();
-    removeCreated();
-    removeArchive();
     for (const release of releases) release();
     broker.clear();
     identities.clear();
+    handled.clear();
   };
 }

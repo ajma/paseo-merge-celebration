@@ -11,8 +11,8 @@ import {
   type WorkspaceGitRuntimeSnapshot,
 } from "../workspace-git-service.js";
 
-test.each(["manual", "automatic", "automatic-offline"])(
-  "merge celebration delivers a %s archive through the live client",
+test.each(["connected", "offline"])(
+  "merge celebration detects a merge before archive with a %s client",
   async (mode) => {
     const root = await mkdtemp(join(tmpdir(), "paseo-celebration-e2e-"));
     const pluginPath = process.env.MERGE_PLUGIN_DIR!;
@@ -66,7 +66,7 @@ test.each(["manual", "automatic", "automatic-offline"])(
         },
       ],
     };
-    await writeFile(statePath, JSON.stringify(pr));
+    await writeFile(statePath, JSON.stringify({ ...pr, state: "OPEN", mergedAt: null }));
     const ghPath = join(bin, "gh");
     await writeFile(
       ghPath,
@@ -80,7 +80,7 @@ test.each(["manual", "automatic", "automatic-offline"])(
     process.env.PATH = `${bin}:${previousPath}`;
     const listeners: Array<(snapshot: WorkspaceGitRuntimeSnapshot) => void> = [];
     let mergedSnapshot: WorkspaceGitRuntimeSnapshot | undefined;
-    if (mode.startsWith("automatic")) {
+    {
       const observe = WorkspaceGitServiceImpl.prototype.onSnapshotUpdated;
       vi.spyOn(WorkspaceGitServiceImpl.prototype, "onSnapshotUpdated").mockImplementation(function (
         listener
@@ -93,7 +93,7 @@ test.each(["manual", "automatic", "automatic-offline"])(
         cwd,
         options
       ) {
-        if (options?.reason === "auto-archive-on-merge" && mergedSnapshot)
+        if (mergedSnapshot)
           return Promise.resolve(mergedSnapshot);
         return getSnapshot.call(this, cwd, options);
       });
@@ -101,7 +101,7 @@ test.each(["manual", "automatic", "automatic-offline"])(
     const daemon = await createTestPaseoDaemon({
       daemonVersion: "0.11.2",
       pluginsEnabled: true,
-      autoArchiveAfterMerge: mode.startsWith("automatic"),
+      autoArchiveAfterMerge: false,
     });
     const client = new DaemonClient({
       url: `ws://127.0.0.1:${daemon.port}/ws`,
@@ -184,9 +184,9 @@ test.each(["manual", "automatic", "automatic-offline"])(
           )
           .toBe(0);
       }
-      if (mode.startsWith("automatic")) {
-        // Drive the actual daemon auto-archive controller at its forge observation boundary.
-        // Registry mutation, lifecycle hook, cleanup, RPC and client are all real.
+      {
+        // Drive forge state while automatic archival is disabled.
+        await writeFile(statePath, JSON.stringify(pr));
         mergedSnapshot = {
           cwd: created.workspace!.workspaceDirectory,
           git: { isGit: true, isDirty: false, aheadOfOrigin: 0 },
@@ -212,7 +212,7 @@ test.each(["manual", "automatic", "automatic-offline"])(
         };
         for (const listener of listeners) listener(open);
         for (const listener of listeners) listener(mergedSnapshot);
-      } else expect((await client.archiveWorkspace(id)).error).toBeNull();
+      }
       if (mode.endsWith("offline")) {
         await expect
           .poll(
@@ -247,7 +247,9 @@ test.each(["manual", "automatic", "automatic-offline"])(
       });
       stopEvents();
       expect(await poll(false)).toEqual({ events: [] });
-      await client.archiveWorkspace(id);
+      const paseo = createPaseoApi(client);
+      expect((await paseo.workspaces.list()).entries.some((workspace) => workspace.id === id)).toBe(true);
+      expect((await paseo.workspaces.archive(id)).error).toBeNull();
       expect(await poll(false)).toEqual({ events: [] });
       expect(
         await client.invokePluginRpc("paseo-merge-celebration", "celebrations.poll", {
@@ -257,36 +259,6 @@ test.each(["manual", "automatic", "automatic-offline"])(
       ).toEqual({ events: [] });
       await client.reloadPlugin("paseo-merge-celebration");
       expect(await poll(true)).toEqual({ events: [] });
-      // A second workspace on the same repo represents manual archiving of an open PR.
-      await writeFile(statePath, JSON.stringify({ ...pr, state: "OPEN", mergedAt: null }));
-      const unmerged = await client.createWorkspace({
-        source: { kind: "directory", path: repository },
-      });
-      expect(unmerged.error).toBeNull();
-      expect((await client.archiveWorkspace(unmerged.workspace!.id)).error).toBeNull();
-      // Await a normal RPC round-trip and confirm no event was published after verification.
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      expect(await poll(false)).toEqual({ events: [] });
-      const logs = await client.getPluginLogs("paseo-merge-celebration");
-      expect(logs.filter((entry) => entry.message.includes("Merge verification failed"))).toEqual(
-        []
-      );
-      await writeFile(statePath, JSON.stringify({ ...pr, error: true }));
-      const unavailable = await client.createWorkspace({
-        source: { kind: "directory", path: repository },
-      });
-      expect(unavailable.error).toBeNull();
-      expect((await client.archiveWorkspace(unavailable.workspace!.id)).error).toBeNull();
-      await expect
-        .poll(
-          async () =>
-            (
-              await client.getPluginLogs("paseo-merge-celebration")
-            ).some((entry) => entry.message.includes("Merge verification failed")),
-          { timeout: 5000 }
-        )
-        .toBe(true);
-      expect(await poll(false)).toEqual({ events: [] });
       expect(
         (await client.listPlugins()).find((entry) => entry.id === "paseo-merge-celebration")?.status
       ).toBe("running");

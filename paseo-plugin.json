@@ -1,8 +1,8 @@
 {
   "id": "paseo-merge-celebration",
   "name": "Merge celebration",
-  "description": "Celebrate archived GitHub workspaces after their pull requests merge. Desktop and browser clients only; no app changes required.",
+  "description": "Celebrate GitHub pull request merges, then dismiss or archive the workspace. Desktop and browser clients only; no app changes required.",
   "requirements": {
-    "paseo": "0.11.2"
+    "paseo": ">=0.11.2 <0.13.0"
   }
 }
