@@ -95,8 +95,9 @@ test("workspace PR updates celebrate merges without archiving and retain them of
     await new Promise(resolve => setTimeout(resolve, 100));
     assert.deepEqual((await poll("unverified")).events, []);
     await writeFile(statePath, JSON.stringify(nextPr));
-    update(next);
     for (let attempts = 0; attempts < 100; attempts++) {
+      // A prior lookup may still be in flight; later snapshots trigger its retry.
+      update(next);
       response = await poll("next-merge");
       if (response.events.length) break;
       await new Promise(resolve => setTimeout(resolve, 20));
