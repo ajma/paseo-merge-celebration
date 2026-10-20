@@ -34,10 +34,12 @@ export function CelebrationOverlay({
   store,
   settings,
   onArchive,
+  onOpenWorkspace,
 }: Pick<PluginHostProps, "theme" | "layout"> & {
   store: CelebrationStore;
   settings: CelebrationSettings;
   onArchive?: (workspaceId: string) => Promise<void>;
+  onOpenWorkspace?: (workspaceId: string) => void;
 }) {
   const event = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const motionGeneration = useSyncExternalStore(
@@ -133,6 +135,7 @@ export function CelebrationOverlay({
                 theme={theme}
                 workspaceId={event.workspaceId}
                 onArchive={onArchive}
+                onOpenWorkspace={onOpenWorkspace}
                 onDismiss={() => {
                   if (store.getSnapshot()?.id === event.id) store.dismiss();
                 }}
@@ -149,16 +152,29 @@ function CelebrationActions({
   theme,
   workspaceId,
   onArchive,
+  onOpenWorkspace,
   onDismiss,
 }: {
   theme: PluginHostProps["theme"];
   workspaceId?: string;
   onArchive?: (workspaceId: string) => Promise<void>;
+  onOpenWorkspace?: (workspaceId: string) => void;
   onDismiss: () => void;
 }) {
   const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const archiveDisabled = !workspaceId || !onArchive || archiving;
+  const openDisabled = !workspaceId || !onOpenWorkspace || archiving;
+  function openWorkspace() {
+    if (!workspaceId || !onOpenWorkspace || archiving) return;
+    setError(null);
+    try {
+      onOpenWorkspace(workspaceId);
+      onDismiss();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not open workspace. Try again.");
+    }
+  }
   async function archive() {
     if (!workspaceId || !onArchive || archiving) return;
     setArchiving(true);
@@ -194,6 +210,16 @@ function CelebrationActions({
           style={{ ...button, backgroundColor: theme.colors.surface2 }}
         >
           <Text style={{ color: theme.colors.foreground, fontWeight: "600" }}>Dismiss</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open workspace"
+          accessibilityState={{ disabled: openDisabled }}
+          disabled={openDisabled}
+          onPress={openWorkspace}
+          style={{ ...button, backgroundColor: theme.colors.surface2, opacity: openDisabled ? 0.6 : 1 }}
+        >
+          <Text style={{ color: theme.colors.foreground, fontWeight: "600" }}>Open workspace</Text>
         </Pressable>
         <Pressable
           accessibilityRole="button"

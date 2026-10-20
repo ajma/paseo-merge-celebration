@@ -4,7 +4,7 @@
 
 A little celebration for a lot of hard work. When your pull request is merged, colorful confetti falls across Paseo, with a recap of what you just shipped.
 
-![Colorful confetti falling over a sample Paseo workspace, with a “Work shipped!” recap and Dismiss and Archive workspace buttons](docs/celebration-preview.png)
+![Colorful confetti falling over a sample Paseo workspace, with a “Work shipped!” recap and Dismiss, Open workspace and Archive workspace buttons](docs/celebration-preview.png)
 
 _Staged screenshot: the real celebration UI over a fictional workspace._
 
@@ -13,7 +13,7 @@ _Staged screenshot: the real celebration UI over a fictional workspace._
 - **Celebrate automatically.** Merge your PR and let the confetti fly.
 - **Remember the win.** See the PR title and a short recap of linked issues.
 - **Keep your flow.** Your current screen stays right where it is, ready to use.
-- **Enjoy it as long as you like.** Hit **Dismiss** to keep working, or **Archive workspace** to put the workspace away. The last pieces drift offscreen.
+- **Enjoy it as long as you like.** Hit **Dismiss** to keep working, **Open workspace** to jump to the work you shipped, or **Archive workspace** to put it away. The last pieces drift offscreen.
 - **Keep it calm.** Reduced motion gives you the recap without the animation.
 - **Make it yours.** Pick the words, the emoji and the kind of confetti you like.
 
@@ -38,7 +38,7 @@ Changes apply right away, even to confetti that’s already falling. Press **Pre
 
 ## Try a little joy
 
-Open the Command Center with **⌘K** (or **Ctrl+K**) and choose **Preview merge celebration**. No merge needed. Archive workspace is disabled in previews.
+Open the Command Center with **⌘K** (or **Ctrl+K**) and choose **Preview merge celebration**. No merge needed. Open workspace and Archive workspace are disabled in previews.
 
 Supports **Paseo 0.11.2 through 0.12.x on desktop and in the browser**, with GitHub pull requests.
 

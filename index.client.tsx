@@ -6,6 +6,7 @@ import { createPresentationStore, type PresentationStore } from "./client/presen
 import { mountBrowserOverlay } from "./client/web";
 import { startLiveEvents, reportPresented } from "./client/events";
 import { SettingsScreen, useSettingsBridge } from "./client/settings";
+import { OpenWorkspaceScreen } from "./client/workspace";
 import { previewCelebration } from "./shared/celebration";
 
 function ThemeBridge({
@@ -22,9 +23,17 @@ export default function contribute(client: PluginClientContext) {
   if (Platform.OS !== "web") return () => {};
   const store = createCelebrationStore();
   const presentation = createPresentationStore();
+  const removeOpenWorkspace = client.addScreen({
+    id: "open-workspace",
+    title: "Open workspace",
+    Component: OpenWorkspaceScreen,
+  });
   const unmount = mountBrowserOverlay({
     store,
     presentation,
+    onOpenWorkspace(workspaceId) {
+      client.openScreen({ screenId: "open-workspace", params: { workspaceId } });
+    },
     async onArchive(workspaceId) {
       const result = await client.paseo.workspaces.archive(workspaceId);
       if (result.error) throw new Error(result.error);
@@ -87,6 +96,7 @@ export default function contribute(client: PluginClientContext) {
     },
   });
   return () => {
+    removeOpenWorkspace();
     removeOpenSettings();
     removePreview();
     removeSettings();

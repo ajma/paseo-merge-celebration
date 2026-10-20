@@ -7,10 +7,17 @@ import type { PresentationStore } from "./presentation";
 export interface OverlayRootProps {
   store: CelebrationStore;
   presentation: PresentationStore;
+  onOpenWorkspace?: (workspaceId: string) => void;
   onArchive?: (workspaceId: string) => Promise<void>;
   onPresented?: (id: string) => void;
 }
-export function OverlayRoot({ store, presentation, onPresented, onArchive }: OverlayRootProps) {
+export function OverlayRoot({
+  store,
+  presentation,
+  onPresented,
+  onArchive,
+  onOpenWorkspace,
+}: OverlayRootProps) {
   const [visible, setVisible] = useState(AppState.currentState === "active");
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
@@ -43,6 +50,7 @@ export function OverlayRoot({ store, presentation, onPresented, onArchive }: Ove
       store={store}
       settings={settings}
       onArchive={onArchive}
+      onOpenWorkspace={onOpenWorkspace}
     />
   );
 }
