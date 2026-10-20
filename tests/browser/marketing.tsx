@@ -20,10 +20,11 @@ presentation.update({
     statusDanger: "#e06c75",
   },
 });
-mountBrowserOverlay({ store, presentation });
+mountBrowserOverlay({ store, presentation, onArchive: async () => { store.dismiss(); } });
 store.show({
   id: "marketing-preview",
   workspaceName: "Keyboard shortcuts",
+  workspaceId: "fictional-workspace",
   title: "Find your way around faster",
   url: "https://github.com/example/launchpad/pull/128",
   issues: [

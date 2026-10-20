@@ -5,6 +5,7 @@ export const MAX_PENDING = 100;
 export const celebrationSchema = z.object({
   id: z.string(),
   workspaceName: z.string(),
+  workspaceId: z.string().optional(),
   expiresAt: z.number().optional(),
   title: z.string(),
   url: z.string().url(),
@@ -48,7 +49,7 @@ export const previewCelebration: Celebration = {
       number: 42,
       title: "Celebrate shipped work",
       summary:
-        "Added a fullscreen celebration when merged work is archived, with a dismiss button and support for reduced motion.",
+        "Added a fullscreen celebration when a pull request merges, with dismiss and archive buttons and support for reduced motion.",
     },
   ],
 };

@@ -1,12 +1,12 @@
 # Setup and development
 
-Fullscreen confetti over the current Paseo desktop/browser window when an archived workspace's GitHub PR has merged. Includes a dismiss button, linked issue recaps, reduced-motion support and **Preview merge celebration** in the Command Center. The current screen stays mounted and usable.
+Fullscreen confetti over the current Paseo desktop/browser window when Paseo detects a workspace's GitHub PR merge. Includes Dismiss and Archive workspace buttons, linked issue recaps, reduced-motion support and **Preview merge celebration** in the Command Center. The current screen stays mounted and usable.
 
-This version runs on **stock Paseo 0.11.2**. It needs no app patch, app rebuild or daemon restart. The earlier patch-dependent implementation has been replaced.
+This version supports **stock Paseo 0.11.2 through 0.12.x**, including a 0.12.0 app connected to a 0.11.2 daemon. It needs no app patch, app rebuild or daemon restart. The earlier patch-dependent implementation has been replaced.
 
 ## Requirements and installation
 
-- Paseo 0.11.2 desktop or browser client and daemon. The manifest pins the tested version.
+- Paseo 0.11.2 through 0.12.x desktop or browser client and daemon. The manifest permits both versions independently, so a 0.12.0 client can load the plugin from a 0.11.2 daemon.
 - Git and an authenticated GitHub CLI (`gh`) on the daemon host's PATH, with access to the repository and linked issues. GitHub.com repositories only.
 - Native iOS/Android clients contribute no celebration UI. Desktop/browser layouts were tested on macOS Chrome; Windows/Linux desktop testing remains pending.
 
@@ -42,24 +42,23 @@ The overlay is mounted outside Paseo's component tree, so it cannot call `useSet
 
 Confetti options are plain multipliers passed to the simulation. Size scales sheets as they are born. Speed scales simulated time, so falling, spinning and emission all speed up or slow down together, and density stays the same. Amount scales both the birth rate and the particle cap. Speed and amount apply to a running shower immediately; size applies to new sheets.
 
-## Archive and delivery behavior
+## Merge detection and delivery behavior
 
-Current docs and source were inspected at Paseo commit `f56c0139283028ea8b62e9ce40c1fcccad7b3efb`:
+Before accepting a live client, the server observes workspace descriptors through an owned SDK workspace subscription. Existing merged PRs in the initial list are treated as history, so connecting or reloading does not celebrate old work. Later snapshots and upserts whose GitHub PR has `isMerged` trigger verification. Detection follows Paseo's GitHub status refresh cadence; no archive hook is required.
 
-- [`workspace.archived`](https://github.com/getpaseo/paseo/blob/f56c0139283028ea8b62e9ce40c1fcccad7b3efb/packages/plugin/src/server/lifecycle.ts) supplies identity and an archive timestamp, but no archive reason or PR state.
-- [Archive cleanup](https://github.com/getpaseo/paseo/blob/f56c0139283028ea8b62e9ce40c1fcccad7b3efb/packages/server/src/server/workspace-archive-service.ts) can race plugin hooks. [Worktree removal](https://github.com/getpaseo/paseo/blob/f56c0139283028ea8b62e9ce40c1fcccad7b3efb/packages/server/src/utils/worktree.ts) retains the local branch in the main repository.
+The server captures repository and branch identity from descriptors, falling back to Git when needed. It reads `refs/heads/<branch>` from the main repository, checks the known PR or GitHub's PRs associated with that exact commit, and requires an identical PR head SHA, `MERGED` state and a merge timestamp. Updates are deduplicated by workspace and PR URL, including after presentation. Failed checks can retry on later descriptor updates. Subscription observation continues after client leases expire, so a detected merge can wait for a client to reconnect.
 
-Before accepting a live client, the server observes workspace descriptors and captures missing Git identity. It also observes workspace creation. The archive callback reads `refs/heads/<branch>` from the surviving main repository, rather than launching `gh` in a removed worktree. It checks the known PR or GitHub's [PRs associated with that exact commit](https://docs.github.com/en/rest/commits/commits#list-pull-requests-associated-with-a-commit), requires an identical PR head SHA, and requires `MERGED` with `mergedAt <= archivedAt`. A manual archive of already merged work qualifies; an archive of open work does not. A later merge cannot celebrate an earlier archive.
+The recap offers **Dismiss**, which closes the celebration and keeps the workspace, and **Archive workspace**, which calls the selected host's normal `paseo.workspaces.archive(workspaceId)` SDK method. Archive requests disable the archive button while pending. A failed request shows an error and leaves both dismissal and retry available. Success dismisses only the originating celebration, so a later queued recap stays open. Previews carry no workspace ID and show a disabled Archive workspace button that cannot call the archive API. If a descriptor already has `archivingAt`, its celebration disables the archive action. Paseo's own automatic archival setting still applies; disable it to choose archival from this dialog.
 
 Up to three GitHub closing issues get a 300-character plain text excerpt. Missing issue bodies fall back to issue titles. If an issue cannot be fetched, a numbered placeholder preserves the verified merge celebration. The PR title describes the shipped change. No model is called and Markdown/HTML is not executed.
 
-Typed RPC polls once per second. The server retains up to 100 verified celebrations in memory for 24 hours, even when no client is polling. Client leases still expire after four seconds for diagnostics, but no longer control archive eligibility or event retention. Each connection receives pending events once; a restored baseline offers unacknowledged events again. A visible overlay acknowledges its event through `celebrations.presented`, removing it from the server queue. Clients retry failed acknowledgements before polling, including after reconnect. The acknowledgement confirms a visible component, not that someone looked at it. Once any window acknowledges an event, newly connected windows do not receive it.
+Typed RPC polls once per second. The server retains up to 100 verified celebrations in memory for 24 hours, even when no client is polling. Client leases still expire after four seconds for diagnostics, but do not control merge eligibility or event retention. Each connection receives pending events once; a restored baseline offers unacknowledged events again. A visible overlay acknowledges its event through `celebrations.presented`, removing it from the server queue. Clients retry failed acknowledgements before polling, including after reconnect. The acknowledgement confirms a visible component, not that someone looked at it. Once any window acknowledges an event, newly connected windows do not receive it.
 
 An owned workspace subscription resets the client baseline whenever a fresh connection snapshot arrives. A poll requires the same non-null subscription ID before and after its RPC, so responses from old connections cannot reach the UI. Received events wait in order for dismissal. On reset, undisplayed events become eligible for recovery; displayed or dismissed IDs remain suppressed. Hidden windows wait for visibility before acknowledging. Turning celebrations off consumes events without displaying them. Pending events and acknowledgement state are not persisted across plugin reload or daemon restart. If a client reloads while a presentation acknowledgement is failing, its local retry state is lost and the server can offer the event again.
 
-Unknown identity, detached checkouts, inaccessible repositories, deleted branch refs and GitHub lookup failures stay silent and log a diagnostic. Custom teardown that deletes the main repository or branch is unsupported. Identity must have been observed through a previous client connection or workspace creation before archive.
+Unknown identity, detached checkouts, inaccessible repositories, deleted branch refs and GitHub lookup failures stay silent and log a diagnostic. Custom teardown that deletes the main repository or branch is unsupported. Observation starts with the first celebration poll and continues until plugin teardown.
 
-Logs distinguish an observed archive, its merge decision, publication, delivery, and a visible overlay's acknowledgement. The diagnostic RPC `celebrations.diagnose` accepts `{ preview: false }` to report the live client count, or `{ preview: true }` to queue a labeled preview without archiving anything. Ordinary Command Center preview remains local.
+Logs distinguish merge verification failures, publication and a visible overlay's acknowledgement. The diagnostic RPC `celebrations.diagnose` accepts `{ preview: false }` to report the live client count, or `{ preview: true }` to queue a labeled preview without archiving anything. Ordinary Command Center preview remains local.
 
 ## Verification
 
@@ -72,13 +71,13 @@ npm run preview
 
 Browser tests require Chrome. They use the actual client entry and React Native Web, with a host exposing only stock plugin registrations. They exercise preview, saved settings, full-viewport bounds, issue recaps, continued typing/clicking, theme changes, reduced motion, dismissal, repeat preview and plugin unload. Screenshots are in `artifacts/`.
 
-The actual archive-hook test uses a prepared Paseo source checkout (`npm ci`, `npm run build:app-deps`):
+The daemon integration test uses a prepared Paseo source checkout (`npm ci`, `npm run build:app-deps`):
 
 ```sh
 PASEO_SOURCE=/absolute/path/to/paseo npm run test:archive
 ```
 
-It temporarily adds a test fixture to the existing server test suite, starts a disposable daemon on a random port, installs the plugin, and archives temporary Git workspaces. GitHub responses use a deterministic test-only executable; no remote PR is created or merged. It verifies both manual archival and automatic archival through Paseo's real auto-archive controller, driven by synthetic open-to-merged forge snapshots. An additional automatic-archive case waits for all client leases to expire before the merge, then reconnects and verifies delivery. These paths exercise registry mutation, lifecycle delivery, managed worktree cleanup, the actual client subscription and its celebration store. It also covers diagnostic previews, duplicates, reloads, new connections, an open PR and a GitHub failure. A separate test deletes a real worktree before merge lookup.
+It temporarily adds a test fixture to the existing server test suite, starts a disposable daemon on a random port, installs the plugin, and watches a temporary Git workspace. GitHub responses use a deterministic test-only executable; no remote PR is created or merged. Synthetic open-to-merged forge snapshots exercise the actual workspace observation, RPC delivery and celebration store, with automatic archival disabled. The test checks that the workspace remains active until explicitly archived through the SDK. The ordinary test suite also checks duplicate snapshots, historical merges, recovery, verification failure and merge lookup after a real worktree is removed. Browser tests cover separate dismissal and archive actions, compact layouts, archive failures and retries.
 
 See [verification evidence](artifacts/verification.md) for recorded results and platform limits.
 

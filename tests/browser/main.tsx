@@ -18,6 +18,16 @@ const pluginContext = {
   },
   paseo: {
     workspaces: {
+      async archive(workspaceId: string) {
+        document.body.setAttribute("data-archive-request", workspaceId);
+        const requests = Number(document.body.getAttribute("data-archive-count") ?? 0) + 1;
+        document.body.setAttribute("data-archive-count", String(requests));
+        if (document.body.hasAttribute("data-delay-archive"))
+          await new Promise<void>((resolve) => Object.assign(window, { finishArchive: resolve }));
+        if (document.body.hasAttribute("data-fail-archive")) return { error: "Workspace is busy. Try again." };
+        document.body.setAttribute("data-archived-workspace", workspaceId);
+        return { error: null };
+      },
       async list() {
         return {
           subscription: {
@@ -54,7 +64,9 @@ const pluginContext = {
 };
 Object.assign(window, {
   setCelebrationSettings: setTestSettings,
-  queueCelebration: () => broker.publish({ ...previewCelebration, id: "recovered" }),
+  queueCelebration: (id = "recovered") => broker.publish({
+    ...previewCelebration, id, workspaceId: "merged-workspace",
+  }),
 });
 const cleanup = contribute(pluginContext as unknown as PluginClientContext);
 function App() {
