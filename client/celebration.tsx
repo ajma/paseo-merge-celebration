@@ -53,6 +53,7 @@ export function CelebrationOverlay({
   const reduced = useReducedMotion();
   const { width, height } = useWindowDimensions();
   const options = useMemo(() => confettiOptions(settings), [settings]);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
   function isCurrent() {
     return event !== null && store.getSnapshot()?.id === event.id;
   }
@@ -70,7 +71,16 @@ export function CelebrationOverlay({
           options={options}
         />
       )}
-      {event && (
+      {archiveError && (
+        <ArchiveErrorDialog
+          theme={theme}
+          compact={layout.compact}
+          message={archiveError}
+          onDismiss={() => setArchiveError(null)}
+          shortcuts={shortcuts}
+        />
+      )}
+      {event && !archiveError && (
         <View
           testID="celebration-overlay"
           pointerEvents="box-none"
@@ -160,6 +170,7 @@ export function CelebrationOverlay({
                 theme={theme}
                 workspaceId={event.workspaceId}
                 onArchive={onArchive}
+                onArchiveError={setArchiveError}
                 onOpenWorkspace={onOpenWorkspace}
                 onDismiss={dismiss}
                 isCurrent={isCurrent}
@@ -173,10 +184,60 @@ export function CelebrationOverlay({
   );
 }
 
+function ArchiveErrorDialog({
+  theme,
+  compact,
+  message,
+  onDismiss,
+  shortcuts,
+}: {
+  theme: PluginHostProps["theme"];
+  compact: boolean;
+  message: string;
+  onDismiss: () => void;
+  shortcuts?: CelebrationShortcuts;
+}) {
+  useEffect(() => shortcuts?.subscribe({ dismiss: onDismiss }), [shortcuts, onDismiss]);
+  return (
+    <View
+      pointerEvents="box-none"
+      style={{ position: "absolute", top: compact ? 64 : 48, left: 16, right: 16, alignItems: "center" }}
+    >
+      <View
+        role="alertdialog"
+        accessibilityLabel="Could not archive workspace"
+        style={{
+          width: "100%", maxWidth: compact ? 440 : 520, padding: compact ? 18 : 22,
+          backgroundColor: theme.colors.surface1, borderColor: theme.colors.border,
+          borderWidth: 1, borderRadius: 16, gap: 16,
+        }}
+      >
+        <Text accessibilityRole="header" style={{ color: theme.colors.foreground, fontSize: 20, fontWeight: "700" }}>
+          Could not archive workspace
+        </Text>
+        <Text accessibilityRole="alert" style={{ color: theme.colors.statusDanger }}>{message}</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss error"
+          aria-keyshortcuts="Escape"
+          onPress={onDismiss}
+          style={{
+            alignSelf: "flex-end", minHeight: 44, paddingHorizontal: 16, borderRadius: 8,
+            justifyContent: "center", backgroundColor: theme.colors.surface2,
+          }}
+        >
+          <Text style={{ color: theme.colors.foreground, fontWeight: "600" }}>Dismiss</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 function CelebrationActions({
   theme,
   workspaceId,
   onArchive,
+  onArchiveError,
   onOpenWorkspace,
   onDismiss,
   isCurrent,
@@ -185,16 +246,16 @@ function CelebrationActions({
   theme: PluginHostProps["theme"];
   workspaceId?: string;
   onArchive?: (workspaceId: string) => Promise<void>;
+  onArchiveError: (message: string) => void;
   onOpenWorkspace?: (workspaceId: string) => void;
   onDismiss: () => void;
   isCurrent: () => boolean;
   shortcuts?: CelebrationShortcuts;
 }) {
-  const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const archivingRef = useRef(false);
-  const archiveDisabled = !workspaceId || !onArchive || archiving;
-  const openDisabled = !workspaceId || !onOpenWorkspace || archiving;
+  const archiveDisabled = !workspaceId || !onArchive;
+  const openDisabled = !workspaceId || !onOpenWorkspace;
   function openWorkspace() {
     if (!isCurrent() || !workspaceId || !onOpenWorkspace || archivingRef.current) return;
     setError(null);
@@ -208,16 +269,11 @@ function CelebrationActions({
   async function archive() {
     if (!isCurrent() || !workspaceId || !onArchive || archivingRef.current) return;
     archivingRef.current = true;
-    setArchiving(true);
-    setError(null);
+    onDismiss();
     try {
       await onArchive(workspaceId);
-      onDismiss();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not archive workspace. Try again.");
-    } finally {
-      archivingRef.current = false;
-      setArchiving(false);
+      onArchiveError(error instanceof Error ? error.message : "Could not archive workspace. Try again.");
     }
   }
   useEffect(() => shortcuts?.subscribe({
@@ -258,13 +314,13 @@ function CelebrationActions({
           accessibilityRole="button"
           accessibilityLabel="Archive workspace"
           aria-keyshortcuts="Alt+A"
-          accessibilityState={{ disabled: archiveDisabled, busy: archiving }}
+          accessibilityState={{ disabled: archiveDisabled }}
           disabled={archiveDisabled}
           onPress={() => void archive()}
           style={{ ...button, flexDirection: "row", gap: 10, backgroundColor: theme.colors.accent, opacity: archiveDisabled ? 0.6 : 1 }}
         >
           <Text style={{ color: theme.colors.accentForeground, fontWeight: "600" }}>
-            {archiving ? "Archiving…" : "Archive workspace"}
+            Archive workspace
           </Text>
           <Text style={{ color: theme.colors.accentForeground, fontSize: 12 }}>
             {shortcuts?.labels.archiveWorkspace ?? "Alt+A"}

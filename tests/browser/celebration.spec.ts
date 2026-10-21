@@ -287,19 +287,32 @@ for (const compact of [false, true]) {
   });
 }
 
-test("archive failures keep the celebration open for retry", async ({ page }) => {
-  await page.goto("/");
-  await page.evaluate(() => {
-    document.body.setAttribute("data-fail-archive", "");
-    (window as unknown as { queueCelebration(): void }).queueCelebration();
+for (const compact of [false, true]) {
+  test(`archive dismisses immediately and shows failures in a new dialog; compact=${compact}`, async ({ page }) => {
+    await page.setViewportSize(compact ? { width: 390, height: 844 } : { width: 1280, height: 800 });
+    await page.goto("/");
+    await page.evaluate(() => {
+      document.body.setAttribute("data-delay-archive", "");
+      document.body.setAttribute("data-fail-archive", "");
+      (window as unknown as { queueCelebration(): void }).queueCelebration();
+    });
+    await page.getByRole("button", { name: "Archive workspace" }).click();
+    await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await page.evaluate(() => (window as unknown as { queueCelebration(id: string): void }).queueCelebration("next"));
+    await expect(page.locator("body")).toHaveAttribute("data-presented-celebration", "next");
+    await page.evaluate(() => (window as unknown as { finishArchive(): void }).finishArchive());
+    await expect(page.getByRole("alertdialog", { name: "Could not archive workspace" })).toBeVisible();
+    await expect(page.getByRole("alert")).toHaveText("Workspace is busy. Try again.");
+    await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
+    if (compact) await page.keyboard.press("Escape");
+    else await page.getByRole("button", { name: "Dismiss error" }).click();
+    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await expect(page.getByTestId("celebration-overlay")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
   });
-  await page.getByRole("button", { name: "Archive workspace" }).click();
-  await expect(page.getByRole("alert")).toHaveText("Workspace is busy. Try again.");
-  await expect(page.getByTestId("celebration-overlay")).toBeVisible();
-  await page.evaluate(() => document.body.removeAttribute("data-fail-archive"));
-  await page.getByRole("button", { name: "Archive workspace" }).click();
-  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
-});
+}
 
 test("preview archive button is disabled and cannot archive a workspace", async ({ page }) => {
   await page.goto("/");
@@ -321,11 +334,9 @@ test("a pending archive cannot repeat or dismiss the next celebration", async ({
     (window as unknown as { queueCelebration(): void }).queueCelebration();
   });
   await page.getByRole("button", { name: "Archive workspace" }).click();
-  await expect(page.getByRole("button", { name: "Archive workspace" })).toBeDisabled();
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
   await expect(page.locator("body")).toHaveAttribute("data-archive-count", "1");
-  await expect(page.getByRole("button", { name: "Open workspace", exact: true })).toBeDisabled();
   await page.evaluate(() => (window as unknown as { queueCelebration(id: string): void }).queueCelebration("next"));
-  await page.getByRole("button", { name: "Dismiss celebration" }).click();
   await expect(page.locator("body")).toHaveAttribute("data-presented-celebration", "next");
   await page.evaluate(() => (window as unknown as { finishArchive(): void }).finishArchive());
   await expect(page.locator("body")).toHaveAttribute("data-archived-workspace", "merged-workspace");
@@ -499,7 +510,7 @@ test("repeated archive shortcuts cannot submit concurrent requests", async ({ pa
     }));
   });
   await expect(page.locator("body")).toHaveAttribute("data-archive-count", "1");
-  await expect(page.getByRole("button", { name: "Open workspace", exact: true })).toBeDisabled();
+  await expect(page.getByTestId("celebration-overlay")).toHaveCount(0);
   await page.keyboard.press("Alt+KeyO");
   await expect(page.getByText(/Opened workspace:/)).toHaveCount(0);
   await page.evaluate(() => (window as unknown as { finishArchive(): void }).finishArchive());

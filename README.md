@@ -17,7 +17,7 @@ _Staged screenshot: the real celebration UI over a fictional workspace._
 - **Keep it calm.** Reduced motion gives you the recap without the animation.
 - **Make it yours.** Pick the words, the emoji and the kind of confetti you like.
 
-**Keyboard shortcuts:** **Esc** closes the recap, **Option/Alt+O** opens its workspace, and **Option/Alt+A** archives it. Shortcuts pause while you edit text. Workspace actions are disabled in previews and while archival is pending.
+**Keyboard shortcuts:** **Esc** closes the recap, **Option/Alt+O** opens its workspace, and **Option/Alt+A** archives it. Shortcuts pause while you edit text. Workspace actions are disabled in previews. Archiving closes the recap immediately; failures appear in a separate error dialog.
 
 Unmerged work stays quiet. Existing merged PRs at plugin startup do not trigger celebrations. Merge detection follows Paseo’s GitHub status refreshes. Disable Paseo’s automatic workspace archival after merge if you want to choose when to archive from the celebration. Missed celebrations wait for your desktop or browser to reconnect, for up to 24 hours. Once a window shows one, it will not replay on reconnect. Pending events are held in memory and clear when the plugin or daemon restarts.
 
