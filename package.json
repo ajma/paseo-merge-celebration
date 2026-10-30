@@ -1,6 +1,5 @@
 {
-  "name": "paseo-merge-celebration",
-  "private": true,
+  "name": "@ajma/paseo-merge-celebration",
   "version": "0.1.0",
   "files": [
     "paseo-plugin.json",
@@ -38,5 +37,16 @@
     "zod": "^4.4.3"
   },
   "type": "module",
-  "description": "Plugin-only fullscreen merge celebrations for stock Paseo desktop and browser clients."
+  "description": "Celebrate GitHub pull request merges, then dismiss or archive the workspace. Desktop and browser clients only; no app changes required.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ajma/paseo-merge-celebration.git"
+  },
+  "homepage": "https://github.com/ajma/paseo-merge-celebration#readme",
+  "bugs": {
+    "url": "https://github.com/ajma/paseo-merge-celebration/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

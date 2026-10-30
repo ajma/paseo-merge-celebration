@@ -4,5 +4,8 @@
   "description": "Celebrate GitHub pull request merges, then dismiss or archive the workspace. Desktop and browser clients only; no app changes required.",
   "requirements": {
     "paseo": ">=0.11.2"
-  }
+  },
+  "media": [
+    "docs/celebration-preview.png"
+  ]
 }

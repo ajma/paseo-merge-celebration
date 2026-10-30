@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   AccessibilityInfo,
   Pressable,
@@ -197,7 +197,7 @@ function ArchiveErrorDialog({
   onDismiss: () => void;
   shortcuts?: CelebrationShortcuts;
 }) {
-  useEffect(() => shortcuts?.subscribe({ dismiss: onDismiss }), [shortcuts, onDismiss]);
+  useLayoutEffect(() => shortcuts?.subscribe({ dismiss: onDismiss }), [shortcuts, onDismiss]);
   return (
     <View
       pointerEvents="box-none"
@@ -276,7 +276,7 @@ function CelebrationActions({
       onArchiveError(error instanceof Error ? error.message : "Could not archive workspace. Try again.");
     }
   }
-  useEffect(() => shortcuts?.subscribe({
+  useLayoutEffect(() => shortcuts?.subscribe({
     dismiss: onDismiss,
     openWorkspace: openDisabled ? undefined : openWorkspace,
     archiveWorkspace: archiveDisabled ? undefined : () => void archive(),
