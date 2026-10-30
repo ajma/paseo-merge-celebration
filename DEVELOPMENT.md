@@ -2,11 +2,11 @@
 
 Fullscreen confetti over the current Paseo desktop/browser window when Paseo detects a workspace's GitHub PR merge. Includes a top-right × close control, Open workspace and Archive workspace buttons, linked issue recaps, reduced-motion support and **Preview merge celebration** in the Command Center. The current screen stays mounted and usable.
 
-This version supports **stock Paseo 0.11.2 through 0.12.x**, including a 0.12.0 app connected to a 0.11.2 daemon. It needs no app patch, app rebuild or daemon restart. The earlier patch-dependent implementation has been replaced.
+This version supports **stock Paseo 0.11.2 and later**, including a 0.12.0 app connected to a 0.11.2 daemon. It needs no app patch, app rebuild or daemon restart. The earlier patch-dependent implementation has been replaced.
 
 ## Requirements and installation
 
-- Paseo 0.11.2 through 0.12.x desktop or browser client and daemon. The manifest permits both versions independently, so a 0.12.0 client can load the plugin from a 0.11.2 daemon.
+- Paseo 0.11.2 or later desktop or browser client and daemon. The manifest checks both versions independently, so a 0.12.0 client can load the plugin from a 0.11.2 daemon. The requirement has no upper bound; add one only for a known incompatibility.
 - Git and an authenticated GitHub CLI (`gh`) on the daemon host's PATH, with access to the repository and linked issues. GitHub.com repositories only.
 - Native iOS/Android clients contribute no celebration UI. Desktop/browser layouts were tested on macOS Chrome; Windows/Linux desktop testing remains pending.
 

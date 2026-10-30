@@ -42,6 +42,6 @@ Changes apply right away, even to confetti that’s already falling. Press **Pre
 
 Open the Command Center with **⌘K** (or **Ctrl+K**) and choose **Preview merge celebration**. No merge needed. Open workspace and Archive workspace are disabled in previews.
 
-Supports **Paseo 0.11.2 through 0.12.x on desktop and in the browser**, with GitHub pull requests.
+Supports **Paseo 0.11.2 and later on desktop and in the browser**, with GitHub pull requests.
 
 [Setup and development →](DEVELOPMENT.md)
