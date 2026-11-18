@@ -1,5 +1,8 @@
 # Paseo merge celebration 🎉
 
+> [!IMPORTANT]
+> **Merge celebration has moved into [Workspace organizer](https://github.com/ajma/paseo-workspace-organizer).** It celebrates merged PRs as before, alongside a new workspace sidebar, and needs Paseo 0.16 or later. This repository and the `@ajma/paseo-merge-celebration` npm package are no longer maintained. Remove this plugin and install Workspace organizer instead, or you'll see two celebrations.
+
 **You shipped it. Enjoy the moment.**
 
 A little celebration for a lot of hard work. When your pull request is merged, colorful confetti falls across Paseo, with a recap of what you just shipped.
